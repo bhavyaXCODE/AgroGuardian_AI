@@ -7,6 +7,8 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
+  const API_BASE = 'http://localhost:8000';
+
   // ==========================================================================
   // 1. Navigation View Switching
   // ==========================================================================
@@ -63,26 +65,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (btnReloadOverview) {
     btnReloadOverview.addEventListener('click', () => {
-      // Simulate sync refresh
       btnReloadOverview.style.transform = 'rotate(180deg)';
       btnReloadOverview.style.transition = 'transform 0.5s ease';
       
-      // Randomize values slightly to show active changes
-      setTimeout(() => {
-        const randTemp = (23 + Math.random() * 1).toFixed(1);
-        const randHum = (65 + Math.random() * 4).toFixed(1);
-        
-        if (overviewTemp) overviewTemp.textContent = `${randTemp}°C`;
-        if (overviewHumidity) {
-          overviewHumidity.textContent = `${randHum}%`;
-          const fill = overviewHumidity.parentElement.querySelector('.progress-bar-fill');
-          if (fill) fill.style.width = `${randHum}%`;
-        }
-        
-        btnReloadOverview.style.transform = 'rotate(0deg)';
-        btnReloadOverview.style.transition = 'none';
-        showToastNotification('Ecosystem metrics refreshed successfully.');
-      }, 500);
+      fetch(`${API_BASE}/api/metrics`)
+        .then(response => {
+          if (!response.ok) throw new Error('Network response was not ok');
+          return response.json();
+        })
+        .then(data => {
+          if (overviewTemp) overviewTemp.textContent = `${data.temperature}°C`;
+          if (overviewHumidity) {
+            overviewHumidity.textContent = `${data.humidity}%`;
+            const fill = overviewHumidity.parentElement.querySelector('.progress-bar-fill');
+            if (fill) fill.style.width = `${data.humidity}%`;
+          }
+          const overviewSoilMoisture = document.getElementById('overviewSoilMoisture');
+          if (overviewSoilMoisture) {
+            overviewSoilMoisture.textContent = `${data.soil_nutrition}%`;
+            const fill = overviewSoilMoisture.parentElement.querySelector('.progress-bar-fill');
+            if (fill) fill.style.width = `${data.soil_nutrition}%`;
+          }
+          showToastNotification('Ecosystem metrics refreshed successfully.');
+        })
+        .catch(err => {
+          console.error('Error fetching metrics:', err);
+          showToastNotification('Failed to fetch live ecosystem metrics.', 'warning');
+        })
+        .finally(() => {
+          setTimeout(() => {
+            btnReloadOverview.style.transform = 'rotate(0deg)';
+            btnReloadOverview.style.transition = 'none';
+          }, 500);
+        });
     });
   }
 
@@ -98,50 +113,39 @@ document.addEventListener('DOMContentLoaded', () => {
   const localWeatherHumidity = document.getElementById('localWeatherHumidity');
   const localWeatherWind = document.getElementById('localWeatherWind');
 
-  const cityWeatherDb = {
-    'hinganghat': { temp: '43.3°C', cond: 'Broken Clouds', hum: '16%', wind: '17.8 km/h', rain: 88 },
-    'hyderabad': { temp: '36.8°C', cond: 'Clear Sky', hum: '28%', wind: '11.5 km/h', rain: 10 },
-    'sector 4': { temp: '24.0°C', cond: 'Sunny Conditions', hum: '78%', wind: '12.0 km/h', rain: 15 },
-    'mumbai': { temp: '31.2°C', cond: 'Scattered Showers', hum: '82%', wind: '22.4 km/h', rain: 95 }
-  };
-
   function updateLocalWeather(query) {
-    const normQuery = query.toLowerCase().trim();
-    let data = cityWeatherDb[normQuery];
-    
-    // Fallback if not in registry
-    if (!data) {
-      data = {
-        temp: `${Math.round(20 + Math.random() * 20)}°C`,
-        cond: ['Overcast Clouds', 'Partly Cloudy', 'Clear Sky', 'Light Drizzle'][Math.floor(Math.random() * 4)],
-        hum: `${Math.round(30 + Math.random() * 60)}%`,
-        wind: `${(5 + Math.random() * 18).toFixed(1)} km/h`,
-        rain: Math.round(Math.random() * 100)
-      };
-    }
+    fetch(`${API_BASE}/api/weather?city=${encodeURIComponent(query)}`)
+      .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.json();
+      })
+      .then(data => {
+        if (localWeatherTemp) localWeatherTemp.textContent = data.temp;
+        if (localWeatherCondition) localWeatherCondition.textContent = data.condition;
+        if (localWeatherHumidity) localWeatherHumidity.textContent = data.humidity;
+        if (localWeatherWind) localWeatherWind.textContent = data.wind;
+        
+        const rainBar = document.querySelector('#overview-view .weather-details-row .progress-bar-fill');
+        const rainLabel = document.querySelector('#overview-view .weather-details-row p');
+        if (rainBar) rainBar.style.width = `${data.rain_probability}%`;
+        if (rainLabel) rainLabel.textContent = `${data.rain_probability}% Probability`;
 
-    // Render results
-    if (localWeatherTemp) localWeatherTemp.textContent = data.temp;
-    if (localWeatherCondition) localWeatherCondition.textContent = data.cond;
-    if (localWeatherHumidity) localWeatherHumidity.textContent = data.hum;
-    if (localWeatherWind) localWeatherWind.textContent = data.wind;
-    
-    const rainBar = document.querySelector('#overview-view .weather-details-row .progress-bar-fill');
-    const rainLabel = document.querySelector('#overview-view .weather-details-row p');
-    if (rainBar) rainBar.style.width = `${data.rain}%`;
-    if (rainLabel) rainLabel.textContent = `${data.rain}% Probability`;
-
-    // Dynamic alert banner update
-    const overviewAlertBanner = document.getElementById('overviewAlertBanner');
-    if (overviewAlertBanner) {
-      if (data.rain > 70) {
-        overviewAlertBanner.className = 'ai-insights-alert-box red';
-        overviewAlertBanner.querySelector('p').textContent = 'High rain probability nearby. Reduce fertilizer inputs and monitor for fungal pressure after leaf wetness.';
-      } else {
-        overviewAlertBanner.className = 'ai-insights-alert-box';
-        overviewAlertBanner.querySelector('p').textContent = 'Stable climate indicators. Maintain default N-P-K nutrient schedules.';
-      }
-    }
+        // Dynamic alert banner update
+        const overviewAlertBanner = document.getElementById('overviewAlertBanner');
+        if (overviewAlertBanner) {
+          if (data.rain_probability > 70) {
+            overviewAlertBanner.className = 'ai-insights-alert-box red';
+            overviewAlertBanner.querySelector('p').textContent = 'High rain probability nearby. Reduce fertilizer inputs and monitor for fungal pressure after leaf wetness.';
+          } else {
+            overviewAlertBanner.className = 'ai-insights-alert-box';
+            overviewAlertBanner.querySelector('p').textContent = 'Stable climate indicators. Maintain default N-P-K nutrient schedules.';
+          }
+        }
+      })
+      .catch(err => {
+        console.error('Error fetching weather:', err);
+        showToastNotification('Failed to fetch weather data.', 'warning');
+      });
   }
 
   if (btnSearchCity) {
@@ -207,7 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnAnalyzeLeaf) {
     btnAnalyzeLeaf.addEventListener('click', () => {
       // Check if image is loaded
-      if (!leafPreview.src || leafPreview.style.display === 'none') {
+      if (!leafPreview.src || leafPreview.style.display === 'none' || !leafFileInput.files[0]) {
         showToastNotification('Please browse or upload a leaf image first.', 'warning');
         return;
       }
@@ -218,58 +222,48 @@ document.addEventListener('DOMContentLoaded', () => {
         Analyzing leaf...
       `;
 
-      setTimeout(() => {
-        // Reset button
-        btnAnalyzeLeaf.disabled = false;
-        btnAnalyzeLeaf.innerHTML = `
-          <span class="material-symbols-outlined">auto_awesome</span>
-          Analyze Image
-        `;
+      const formData = new FormData();
+      formData.append('file', leafFileInput.files[0]);
 
-        // Switch panel displays
-        if (diseaseOutputPlaceholder) diseaseOutputPlaceholder.style.display = 'none';
-        if (diseaseResultPanel) diseaseResultPanel.style.display = 'flex';
+      fetch(`${API_BASE}/api/diagnose`, {
+        method: 'POST',
+        body: formData
+      })
+        .then(response => {
+          if (!response.ok) throw new Error('Diagnosis failed');
+          return response.json();
+        })
+        .then(data => {
+          // Switch panel displays
+          if (diseaseOutputPlaceholder) diseaseOutputPlaceholder.style.display = 'none';
+          if (diseaseResultPanel) diseaseResultPanel.style.display = 'flex';
 
-        // Select pseudo random crop pathology output
-        const pathologies = [
-          {
-            name: 'Downy Mildew',
-            sev: 'High Risk',
-            conf: '92.4%',
-            desc: 'Yellowish-green leaf spots forming fuzzy white spores on leaf undersides, common in high relative humidity.',
-            rec: 'Action required: Suspend fertilization schedule and apply copper-based fungicide patches immediately.'
-          },
-          {
-            name: 'Healthy Crop Leaf',
-            sev: 'No Risk',
-            conf: '98.1%',
-            desc: 'Leaf cells show robust chlorophyll content and optimal stomatal conductance. No symptoms of biotic stress.',
-            rec: 'No action required. Maintain current automated biological cycles.'
-          },
-          {
-            name: 'Early Blight',
-            sev: 'Moderate Risk',
-            conf: '84.6%',
-            desc: 'Concentric brown target-like leaf lesions on older vegetation. May indicate local nitrogen/calcium deficiency.',
-            rec: 'Action recommended: Increase soil bio-organic additives and prune affected lower canopy leaves.'
+          // Render pathology report
+          diagnosedDisease.textContent = data.diagnosed_disease;
+          diseaseSeverity.textContent = data.severity;
+          diseaseSeverity.className = `status-badge ${data.severity === 'High Risk' ? 'red' : (data.severity === 'Moderate Risk' ? 'orange' : 'green')}`;
+          diseaseConfidence.textContent = data.confidence;
+          diseaseDescription.textContent = data.description;
+          
+          const recBox = diseaseResultPanel.querySelector('.ai-insights-alert-box');
+          if (recBox) {
+            recBox.className = `ai-insights-alert-box ${data.severity === 'High Risk' ? 'red' : (data.severity === 'Moderate Risk' ? 'red' : 'green')}`;
           }
-        ];
+          diseaseRecommendation.textContent = data.recommendation;
 
-        const selection = pathologies[Math.floor(Math.random() * pathologies.length)];
-
-        // Render pathology report
-        diagnosedDisease.textContent = selection.name;
-        diseaseSeverity.textContent = selection.sev;
-        diseaseSeverity.className = `status-badge ${selection.sev === 'High Risk' ? 'red' : (selection.sev === 'Moderate Risk' ? 'orange' : 'green')}`;
-        diseaseConfidence.textContent = selection.conf;
-        diseaseDescription.textContent = selection.desc;
-        
-        const recBox = diseaseResultPanel.querySelector('.ai-insights-alert-box');
-        recBox.className = `ai-insights-alert-box ${selection.sev === 'High Risk' ? 'red' : (selection.sev === 'Moderate Risk' ? 'red' : 'green')}`;
-        diseaseRecommendation.textContent = selection.rec;
-
-        showToastNotification(`Leaf scanning complete. Pathology: ${selection.name}`);
-      }, 1500);
+          showToastNotification(`Leaf scanning complete. Pathology: ${data.diagnosed_disease}`);
+        })
+        .catch(err => {
+          console.error(err);
+          showToastNotification('Failed to analyze leaf image.', 'warning');
+        })
+        .finally(() => {
+          btnAnalyzeLeaf.disabled = false;
+          btnAnalyzeLeaf.innerHTML = `
+            <span class="material-symbols-outlined">auto_awesome</span>
+            Analyze Image
+          `;
+        });
     });
   }
 
@@ -282,17 +276,47 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (btnSuspendSchedule) {
     btnSuspendSchedule.addEventListener('click', () => {
-      btnSuspendSchedule.disabled = true;
-      btnSuspendSchedule.textContent = 'Suspended';
-      btnSuspendSchedule.style.backgroundColor = '#e5e7eb';
-      btnSuspendSchedule.style.color = 'var(--muted-text)';
-      showToastNotification('Smart Nutrient Advisor schedule suspended for next 36h.');
+      fetch(`${API_BASE}/api/advisor/suspend`, { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+          btnSuspendSchedule.disabled = true;
+          btnSuspendSchedule.textContent = 'Suspended';
+          btnSuspendSchedule.style.backgroundColor = '#e5e7eb';
+          btnSuspendSchedule.style.color = 'var(--muted-text)';
+          showToastNotification(data.message);
+          
+          if (btnOverrideSchedule) {
+            btnOverrideSchedule.disabled = false;
+            btnOverrideSchedule.textContent = 'Override';
+            btnOverrideSchedule.style.backgroundColor = '';
+            btnOverrideSchedule.style.color = '';
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          showToastNotification('Failed to suspend schedule.', 'warning');
+        });
     });
   }
 
   if (btnOverrideSchedule) {
     btnOverrideSchedule.addEventListener('click', () => {
-      showToastNotification('Ecosystem schedule overridden. Proceeding with standard cycle.');
+      fetch(`${API_BASE}/api/advisor/override`, { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+          showToastNotification(data.message);
+          
+          if (btnSuspendSchedule) {
+            btnSuspendSchedule.disabled = false;
+            btnSuspendSchedule.textContent = 'Suspend Schedule';
+            btnSuspendSchedule.style.backgroundColor = '';
+            btnSuspendSchedule.style.color = '';
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          showToastNotification('Failed to override schedule.', 'warning');
+        });
     });
   }
 
@@ -330,33 +354,43 @@ document.addEventListener('DOMContentLoaded', () => {
     simValMoisture.textContent = ph.toFixed(1);
     simValTemp.textContent = `${temp}°C`;
 
-    // Calculate crop health stability (circumference 264)
-    // Dynamic offsets matching user images (default should equal exactly 74%)
-    let stability = Math.round(74 + (ph - 6.0) * 12 + (feed - 37) * 0.4 - Math.abs(temp - 24) * 1.5);
-    stability = Math.max(10, Math.min(100, stability));
+    fetch(`${API_BASE}/api/simulate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        irrigation: feed,
+        moisture: ph,
+        temp: temp
+      })
+    })
+      .then(response => {
+        if (!response.ok) throw new Error('Simulation failed');
+        return response.json();
+      })
+      .then(data => {
+        // Crop health stability (circumference 264)
+        const arcCircumference = 264;
+        const arcOffset = arcCircumference - (arcCircumference * data.stability) / 100;
+        if (simStabilityFill) simStabilityFill.style.strokeDashoffset = arcOffset;
+        if (simStabilityText) simStabilityText.textContent = `${data.stability}%`;
 
-    const arcCircumference = 264;
-    const arcOffset = arcCircumference - (arcCircumference * stability) / 100;
-    simStabilityFill.style.strokeDashoffset = arcOffset;
-    simStabilityText.textContent = `${stability}%`;
+        // Sustainability score
+        if (simSustainabilityVal) simSustainabilityVal.textContent = data.sustainability;
+        if (simSustainabilityBar) simSustainabilityBar.style.width = `${data.sustainability}%`;
 
-    // Sustainability score (default: 68/100)
-    let sustainability = Math.round(68 - (feed - 37) * 0.45 + (ph - 6.0) * 8 - Math.abs(temp - 24) * 0.8);
-    sustainability = Math.max(5, Math.min(100, sustainability));
-    simSustainabilityVal.textContent = sustainability;
-    simSustainabilityBar.style.width = `${sustainability}%`;
+        // Nutrient Absorption
+        if (simWaterEfficiencyText) simWaterEfficiencyText.textContent = `${data.absorption}%`;
+        if (simWaterEfficiencyBar) simWaterEfficiencyBar.style.width = `${data.absorption}%`;
 
-    // Nutrient Absorption / Water Efficiency (default: 63%)
-    let absorption = Math.round(63 + (feed - 37) * 0.25 - (ph - 6.0) * 14 - (temp - 24) * 0.7);
-    absorption = Math.max(0, Math.min(100, absorption));
-    simWaterEfficiencyText.textContent = `${absorption}%`;
-    simWaterEfficiencyBar.style.width = `${absorption}%`;
-
-    // Disease Risk (default: 34%)
-    let risk = Math.round(34 + Math.abs(temp - 24) * 1.8 + (feed - 37) * 0.15 - (ph - 6.0) * 10);
-    risk = Math.max(0, Math.min(100, risk));
-    simDiseaseRiskText.textContent = `${risk}%`;
-    simDiseaseRiskBar.style.width = `${risk}%`;
+        // Disease Risk
+        if (simDiseaseRiskText) simDiseaseRiskText.textContent = `${data.risk}%`;
+        if (simDiseaseRiskBar) simDiseaseRiskBar.style.width = `${data.risk}%`;
+      })
+      .catch(err => {
+        console.error('Error simulating metrics:', err);
+      });
   }
 
   // Bind range input changes
@@ -395,26 +429,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Automated chatbot response generation
-  function getBotReply(userMessage) {
-    const lowerMsg = userMessage.toLowerCase();
-    
-    if (lowerMsg.includes('disease') || lowerMsg.includes('pathology') || lowerMsg.includes('mildew')) {
-      return 'Our neural network risk models check leaf humidity & temperatures to forecast spore spikes. For Downy Mildew, keep fertilizer inputs low and apply copper-based fungicides.';
-    }
-    if (lowerMsg.includes('soil') || lowerMsg.includes('nutrient') || lowerMsg.includes('nitrogen') || lowerMsg.includes('ph')) {
-      return 'Ecosystem Alpha operates at an optimal pH range of 6.2 - 6.8. If soil stress spikes, nitrogen levels must be calibrated immediately using automated smart schedules.';
-    }
-    if (lowerMsg.includes('weather') || lowerMsg.includes('forecast') || lowerMsg.includes('rain')) {
-      return 'Rainfall can cause nutrient runoff. Our Predictive Analysis tab calculates whether to suspend or execute scheduled fertilization intervals based on upcoming precipitation.';
-    }
-    if (lowerMsg.includes('status') || lowerMsg.includes('alive')) {
-      return 'All sensor nodes are currently synced and operational in Sector 4 Alpha. Overall soil quality is stable at 100/100.';
-    }
-    
-    return "I am here to assist with AgroGuardian telemetry. Tell me if you'd like to diagnose a leaf disease, simulate soil conditions, or check regional climate analysis.";
-  }
-
   function handleSendMessage(inputEl, containerEl) {
     const text = inputEl.value.trim();
     if (!text) return;
@@ -431,14 +445,42 @@ document.addEventListener('DOMContentLoaded', () => {
     // Scroll to bottom
     containerEl.scrollTop = containerEl.scrollHeight;
 
-    // 2. Add typing delay response
-    setTimeout(() => {
-      const botBubble = document.createElement('div');
-      botBubble.className = 'chat-message-bubble bot';
-      botBubble.textContent = getBotReply(text);
-      containerEl.appendChild(botBubble);
-      containerEl.scrollTop = containerEl.scrollHeight;
-    }, 800);
+    // 2. Add typing delay response placeholder
+    const typingBubble = document.createElement('div');
+    typingBubble.className = 'chat-message-bubble bot';
+    typingBubble.style.opacity = '0.6';
+    typingBubble.textContent = '...';
+    containerEl.appendChild(typingBubble);
+    containerEl.scrollTop = containerEl.scrollHeight;
+
+    fetch(`${API_BASE}/api/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ message: text })
+    })
+      .then(response => {
+        if (!response.ok) throw new Error('Chat failed');
+        return response.json();
+      })
+      .then(data => {
+        typingBubble.remove();
+        const botBubble = document.createElement('div');
+        botBubble.className = 'chat-message-bubble bot';
+        botBubble.textContent = data.reply;
+        containerEl.appendChild(botBubble);
+        containerEl.scrollTop = containerEl.scrollHeight;
+      })
+      .catch(err => {
+        console.error(err);
+        typingBubble.remove();
+        const botBubble = document.createElement('div');
+        botBubble.className = 'chat-message-bubble bot';
+        botBubble.textContent = 'Sorry, I am having trouble connecting to the AgroGuardian intelligence services right now.';
+        containerEl.appendChild(botBubble);
+        containerEl.scrollTop = containerEl.scrollHeight;
+      });
   }
 
   // Bind floating chat triggers
