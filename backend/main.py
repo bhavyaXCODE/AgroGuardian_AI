@@ -3,6 +3,7 @@ import random
 from pathlib import Path
 from fastapi import FastAPI, UploadFile, File, Form, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import Optional
 import requests
@@ -78,9 +79,7 @@ class AdvisorStateResponse(BaseModel):
 
 # --- Endpoints ---
 
-@app.get("/")
-def read_root():
-    return {"message": "AgroGuardian AI Precision Agriculture API is running."}
+# The root route is handled by mounting the static frontend folder at the end of the file.
 
 @app.get("/api/metrics")
 def get_metrics():
@@ -222,7 +221,10 @@ async def diagnose_leaf(file: UploadFile = File(...)):
             "severity": result["severity"],
             "confidence": result["confidence"],
             "description": result["description"],
-            "recommendation": result["recommendation"]
+            "recommendation": result["recommendation"],
+            "symptoms": result.get("symptoms", []),
+            "causes": result.get("causes", []),
+            "treatment": result.get("treatment", "")
         }
     except Exception as e:
         print(f"Leaf Diagnosis Error: {e}")
@@ -233,7 +235,10 @@ async def diagnose_leaf(file: UploadFile = File(...)):
             "severity": "No Risk",
             "confidence": "95.0%",
             "description": "Unable to complete classification run. Falling back to default baseline status.",
-            "recommendation": "No action required. Maintain biological monitoring cycles."
+            "recommendation": "No action required. Maintain biological monitoring cycles.",
+            "symptoms": ["Healthy green leaves"],
+            "causes": ["Optimal environmental conditions"],
+            "treatment": "No action required. Maintain biological monitoring cycles."
         }
     finally:
         # Clean up temporary upload
@@ -353,3 +358,8 @@ def chatbot_reply(req: ChatRequest):
         )
         
     return {"reply": reply}
+
+# Serve frontend static files
+BASE_DIR = Path(__file__).resolve().parent
+FRONTEND_DIR = BASE_DIR.parent / "frontend"
+app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
