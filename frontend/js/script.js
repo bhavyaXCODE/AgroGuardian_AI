@@ -533,12 +533,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (type === 'warning') {
       toast.style.backgroundColor = 'var(--orange-bg)';
       toast.style.color = 'var(--orange-text)';
-      toast.style.border = '1px solid rgba(245, 158, 11, 0.2)';
+      toast.style.border = '1px solid rgba(251, 191, 36, 0.25)';
+      toast.style.backdropFilter = 'blur(12px)';
+      toast.style.webkitBackdropFilter = 'blur(12px)';
     } else {
-      toast.style.backgroundColor = '#ffffff';
-      toast.style.color = 'var(--primary-text)';
+      toast.style.backgroundColor = 'rgba(13, 27, 20, 0.9)';
+      toast.style.color = '#ffffff';
       toast.style.border = '1px solid var(--outline)';
-      toast.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.05)';
+      toast.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.3)';
+      toast.style.backdropFilter = 'blur(12px)';
+      toast.style.webkitBackdropFilter = 'blur(12px)';
     }
 
     document.body.appendChild(toast);
