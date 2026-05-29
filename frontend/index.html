@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AgroGuardian AI | Precision Agriculture Platform</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+  <meta http-equiv="Pragma" content="no-cache"/>
+  <meta http-equiv="Expires" content="0"/>
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="css/style.css?v=3.1"/>
+</head>
+<body>
+
+  <!-- Scanning scanline overlay -->
+  <div class="scanline-overlay"></div>
+  
+  <div class="app-container">
+    
+    <!-- Left Navigation Sidebar -->
+    <nav class="app-sidebar">
+      <div class="sidebar-header">
+        <span class="material-symbols-outlined logo-icon">eco</span>
+        <h1 class="logo-text">AgroGuardian AI</h1>
+      </div>
+      
+      <div class="sidebar-nav">
+        <div class="sidebar-link active" data-view="overview">
+          <span class="material-symbols-outlined">grid_view</span>
+          <span class="link-text">Overview</span>
+        </div>
+        <div class="sidebar-link" data-view="disease">
+          <span class="material-symbols-outlined">psychiatry</span>
+          <span class="link-text">Disease Detection</span>
+        </div>
+        <div class="sidebar-link" data-view="soil">
+          <span class="material-symbols-outlined">agriculture</span>
+          <span class="link-text">Soil Analysis</span>
+        </div>
+        <div class="sidebar-link" data-view="weather">
+          <span class="material-symbols-outlined">cloudy_snowing</span>
+          <span class="link-text">Weather Forecast</span>
+        </div>
+        <div class="sidebar-link" data-view="simulator">
+          <span class="material-symbols-outlined">science</span>
+          <span class="link-text">Simulator</span>
+        </div>
+        <div class="sidebar-link" data-view="chatbot">
+          <span class="material-symbols-outlined">forum</span>
+          <span class="link-text">AI Chatbot</span>
+        </div>
+      </div>
+      
+      <div class="sidebar-footer">
+        <div class="btn-sidebar-collapse">
+          <span class="material-symbols-outlined">chevron_left</span>
+          <span>Collapse Sidebar</span>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content Panel -->
+    <div class="app-content">
+      
+      <!-- ====================================================================
+           1. OVERVIEW DASHBOARD VIEW
+           ==================================================================== -->
+      <section id="overview-view" class="view-panel active">
+        <header class="content-header">
+          <div class="title-area">
+            <h2>Field Sector Alpha</h2>
+            <p>System status is optimal. Backend connected.</p>
+          </div>
+          <div class="header-controls">
+            <button class="btn-secondary" id="btnReloadOverview" title="Sync Data">
+              <span class="material-symbols-outlined">refresh</span>
+            </button>
+          </div>
+        </header>
+        
+        <div class="view-body">
+          <div class="dashboard-grid mb-stack-lg">
+            
+            <!-- Temperature Card -->
+            <div class="col-4 info-card">
+              <p class="card-label">TEMPERATURE</p>
+              <p class="card-value" id="overviewTemp">23.5°C</p>
+              <p class="card-desc">Live sensor feed</p>
+            </div>
+            
+            <!-- Humidity Card -->
+            <div class="col-4 info-card">
+              <p class="card-label">HUMIDITY</p>
+              <p class="card-value" id="overviewHumidity">66.9%</p>
+              <div class="progress-bar-container">
+                <div class="progress-bar-fill green" style="width: 66.9%"></div>
+              </div>
+            </div>
+            
+            <!-- Soil Nutrition Card (replaces Soil Moisture to remove irrigation references) -->
+            <div class="col-4 info-card">
+              <p class="card-label">SOIL NUTRITION</p>
+              <p class="card-value" id="overviewSoilMoisture">44.2%</p>
+              <div class="progress-bar-container">
+                <div class="progress-bar-fill red" style="width: 44.2%"></div>
+              </div>
+            </div>
+
+            <!-- Local Weather Card -->
+            <div class="col-7 info-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <p class="card-label">
+                  <span>LOCAL WEATHER</span>
+                  <span style="font-weight: 500; text-transform: none; color: var(--secondary-text);">Hinganghat, IN</span>
+                </p>
+                <div class="search-form-group">
+                  <div class="search-input-wrapper">
+                    <input type="text" placeholder="Enter city or village" id="localWeatherInput" value="Hinganghat"/>
+                  </div>
+                  <button class="btn-search-action" id="btnUseLocation" title="Use Current Location">
+                    <span class="material-symbols-outlined" style="font-size: 16px;">my_location</span>
+                  </button>
+                  <button class="btn-search-action" id="btnSearchCity" style="background-color: var(--green-accent); border-color: var(--green-accent); color: white;">
+                    <span>Use Location</span>
+                  </button>
+                </div>
+                
+                <div class="weather-main-panel">
+                  <span class="temp" id="localWeatherTemp">43.3°C</span>
+                  <div class="info">
+                    <span class="condition" id="localWeatherCondition">Broken Clouds</span>
+                    <span class="updated">Updated: 29 May 2026, 11:16</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="weather-details-row">
+                <div class="weather-detail-item">
+                  <span class="label">Humidity</span>
+                  <span class="val" id="localWeatherHumidity">16%</span>
+                </div>
+                <div class="weather-detail-item">
+                  <span class="label">Wind</span>
+                  <span class="val" id="localWeatherWind">17.8 km/h</span>
+                </div>
+                <div class="col-12" style="margin-top: 12px;">
+                  <span class="text-label-caps" style="font-size: 9px; color: var(--secondary-text);">Rain Probability</span>
+                  <div class="progress-bar-container" style="margin-top: 4px;">
+                    <div class="progress-bar-fill blue" style="width: 88%"></div>
+                  </div>
+                  <p class="text-mono" style="font-size: 10px; color: var(--secondary-text); margin-top: 4px;">88% Probability</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- AI Insights Panel (Watering references modified to fertilization / nutrition) -->
+            <div class="col-5 info-card" style="display: flex; flex-direction: column;">
+              <p class="card-label">
+                <span>AI INSIGHTS</span>
+                <span class="text-mono" style="font-size: 8px; opacity: 0.6;">fallback</span>
+              </p>
+              
+              <div class="ai-insights-card mt-gutter" style="margin-top: 16px;">
+                <div class="ai-insight-row green-border">
+                  <h4>Disease Risk Stable</h4>
+                  <p>Current atmospheric conditions are not showing high fungal pressure.</p>
+                </div>
+                <div class="ai-insight-row green-border">
+                  <h4>Nutrition Holding</h4>
+                  <p>Soil nitrogen and mineral levels are currently within a manageable range.</p>
+                </div>
+                <div class="ai-insight-row orange-border">
+                  <h4>Rain May Offset Fertilization</h4>
+                  <p>Rain probability is high. Delay non-critical N-P-K nutrient schedules.</p>
+                </div>
+              </div>
+
+              <!-- Recommendation banner box -->
+              <div class="ai-insights-alert-box red" id="overviewAlertBanner">
+                <span class="material-symbols-outlined">auto_awesome</span>
+                <p>High rain probability nearby. Reduce fertilizer inputs and monitor for fungal pressure after leaf wetness.</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           2. DISEASE DETECTION VIEW
+           ==================================================================== -->
+      <section id="disease-view" class="view-panel">
+        <header class="content-header">
+          <div class="title-area">
+            <h2>Disease Detection</h2>
+            <p>Upload a clear single-leaf image for model prediction.</p>
+          </div>
+        </header>
+        
+        <div class="view-body">
+          <div class="dashboard-grid">
+            
+            <!-- Left Card: Image Upload -->
+            <div class="col-6 info-card">
+              <div class="disease-upload-container" id="leafDropzone">
+                <input type="file" id="leafFileInput" accept="image/*" style="display: none;"/>
+                <span class="material-symbols-outlined upload-icon" id="uploadIcon">cloud_upload</span>
+                <p class="upload-text" id="uploadText">Browse Leaf Image</p>
+                <p class="upload-sub" id="uploadSubText">JPG or PNG</p>
+                <img src="" class="preview-img" id="leafPreview" style="display: none;" alt="Leaf upload preview"/>
+              </div>
+              <button class="btn-primary" id="btnAnalyzeLeaf">
+                <span class="material-symbols-outlined">auto_awesome</span>
+                Analyze Image
+              </button>
+            </div>
+            
+            <!-- Right Card: Diagnosis Output -->
+            <div class="col-6 info-card">
+              <div class="disease-placeholder-card" id="diseaseOutputPlaceholder">
+                <span class="material-symbols-outlined microscope-icon">biotech</span>
+                <p>Prediction results will appear here.</p>
+              </div>
+              
+              <div id="diseaseResultPanel" style="display: none; flex-direction: column; gap: 16px; height: 100%;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid var(--outline); padding-bottom: 12px;">
+                  <div>
+                    <h3 class="text-label-caps" style="color: var(--red-accent);">Diagnosis Result</h3>
+                    <p class="text-headline-md" style="margin-top: 4px;" id="diagnosedDisease">Downy Mildew</p>
+                  </div>
+                  <span class="status-badge red" id="diseaseSeverity">High Risk</span>
+                </div>
+                
+                <div class="weather-detail-item">
+                  <span class="label">Confidence Score</span>
+                  <span class="val" id="diseaseConfidence">92.4%</span>
+                </div>
+                
+                <div class="weather-detail-item" style="border-top: 1px solid var(--outline); padding-top: 12px;">
+                  <span class="label">Description</span>
+                  <p class="card-desc" style="margin-top: 4px; font-size: 13px;" id="diseaseDescription">
+                    Downy mildew is caused by oomycete microbes that produce spores on leaf undersides under warm, wet conditions.
+                  </p>
+                </div>
+                
+                <div class="ai-insights-alert-box red" style="margin-top: auto;">
+                  <span class="material-symbols-outlined">lightbulb</span>
+                  <p id="diseaseRecommendation">Action required: Suspend schedule and apply copper-based fungicide to affected patches immediately.</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           3. SOIL ANALYSIS VIEW
+           ==================================================================== -->
+      <section id="soil-view" class="view-panel">
+        <header class="content-header">
+          <div class="title-area">
+            <h2>Soil Intelligence</h2>
+            <p>Live analysis powered by real-time telemetry.</p>
+          </div>
+          <div class="header-controls">
+            <div class="badge-live-sync">
+              <div class="dot"></div>
+              <span>LIVE SYNC</span>
+            </div>
+          </div>
+        </header>
+        
+        <div class="view-body">
+          <div class="dashboard-grid">
+            
+            <!-- Quality Card -->
+            <div class="col-6 info-card">
+              <p class="card-label">
+                <span>OVERALL SOIL QUALITY</span>
+                <span class="material-symbols-outlined" style="color: var(--green-accent); font-variation-settings: 'FILL' 1;">workspace_premium</span>
+              </p>
+              <p class="card-value">100<span style="font-size: 16px; color: var(--secondary-text); font-weight: 500;">/100</span></p>
+              <div class="progress-bar-container" style="height: 12px; margin-top: 20px;">
+                <div class="progress-bar-fill green" style="width: 100%"></div>
+              </div>
+            </div>
+            
+            <!-- Stress Index Card -->
+            <div class="col-6 info-card">
+              <p class="card-label">
+                <span>SOIL STRESS INDEX</span>
+                <span class="material-symbols-outlined" style="color: var(--secondary-text);">swap_calls</span>
+              </p>
+              <p class="card-value">0<span style="font-size: 16px; color: var(--secondary-text); font-weight: 500;">/100</span></p>
+              <div class="progress-bar-container" style="height: 12px; margin-top: 20px;">
+                <div class="progress-bar-fill grey" style="width: 0%"></div>
+              </div>
+            </div>
+
+            <!-- Water Retention (Salt Retention replacement) -->
+            <div class="col-4 info-card">
+              <p class="card-label">
+                <span>Salt Retention</span>
+                <span class="material-symbols-outlined" style="color: var(--blue-accent);">water_drop</span>
+              </p>
+              <p class="card-value" style="font-size: 28px; margin-top: 12px;">41.5%</p>
+              <p class="card-desc">Derived from live soil diagnostics.</p>
+            </div>
+
+            <!-- Nutrient Status -->
+            <div class="col-4 info-card">
+              <p class="card-label">
+                <span>Nutrient Status</span>
+                <span class="material-symbols-outlined" style="color: var(--green-accent);">nest_eco_leaf</span>
+              </p>
+              <div style="margin-top: 14px;">
+                <span class="status-badge green">OPTIMAL</span>
+              </div>
+              <p class="card-desc" style="margin-top: 16px;">Based on organic carbon capacity.</p>
+            </div>
+
+            <!-- Fungal Risk -->
+            <div class="col-4 info-card">
+              <p class="card-label">
+                <span>Fungal Risk</span>
+                <span class="material-symbols-outlined" style="color: var(--orange-accent);">bug_report</span>
+              </p>
+              <div style="margin-top: 14px;">
+                <span class="status-badge orange">MEDIUM</span>
+              </div>
+              <p class="card-desc" style="margin-top: 16px;">Analyzed from temp and humidity trends.</p>
+            </div>
+
+            <!-- Recommendation Box Banner -->
+            <div class="col-12 soil-advisor-box">
+              <div class="soil-advisor-header">
+                <span class="material-symbols-outlined">psychology</span>
+                <span>AI Insight &amp; Recommendation</span>
+              </div>
+              <div class="soil-advisor-content">
+                <span class="material-symbols-outlined check-icon">check_circle</span>
+                <p>Soil parameters are currently stable. Maintain standard fertilization and conservation schedules.</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ====================================================================
+           4. WEATHER FORECAST VIEW
+           ==================================================================== -->
+      <section id="weather-view" class="view-panel">
+        <header class="content-header">
+          <div class="title-area">
+            <h2>Predictive Analysis</h2>
+            <p>Sector 4 Alpha • Updated 2 mins ago</p>
+          </div>
+          <div class="header-controls">
+            <button class="btn-secondary">
+              <span class="material-symbols-outlined">calendar_today</span>
+              <span>Past 30 Days</span>
+            </button>
+          </div>
+        </header>
+        
+        <div class="view-body">
+          <div class="dashboard-grid">
+            
+            <!-- Current Conditions Card -->
+            <div class="col-6 info-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <p class="card-label">
+                  <span>CURRENT CONDITIONS</span>
+                  <span class="material-symbols-outlined" style="color: var(--orange-accent); font-variation-settings: 'FILL' 1;">wb_sunny</span>
+                </p>
+                <p class="card-value" style="font-size: 56px;">24°C</p>
+              </div>
+              
+              <div class="weather-details-row" style="margin-top: 20px;">
+                <div class="weather-detail-item">
+                  <span class="label">Humidity</span>
+                  <span class="val">78%</span>
+                </div>
+                <div class="weather-detail-item">
+                  <span class="label">Wind (SW)</span>
+                  <span class="val">12 km/h</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Smart Advisor Card (Irrigation replaced with Nitrogen/Fertilizer advisor to remove irrigation details) -->
+            <div class="col-6">
+              <div class="smart-irrigation-card">
+                <div class="advisor-header">
+                  <span class="advisor-title">Smart Nitrogen Advisor</span>
+                  <span class="status-badge green">ACTION REQ</span>
+                </div>
+                <div class="advisor-body">
+                  <div class="advisor-icon-wrapper">
+                    <span class="material-symbols-outlined">science</span>
+                  </div>
+                  <div class="advisor-text">
+                    Recommendation: Skip Cycle 4. Heavy precipitation (22mm) expected in the next 36 hours. Soil nitrogen levels are currently optimal. Continuing fertilization will lead to chemical runoff and increased fungal risk.
+                  </div>
+                </div>
+                <div class="advisor-buttons">
+                  <button class="btn-advisor-action primary" id="btnSuspendSchedule">Suspend Schedule</button>
+                  <button class="btn-advisor-action secondary" id="btnOverrideSchedule">Override</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Risk Analysis Engine (ROSCOE) -->
+            <div class="col-4 info-card" style="display: flex; flex-direction: column;">
+              <div class="roscoe-header-row">
+                <span class="engine-title">Risk Analysis Engine</span>
+                <span class="engine-logo">ROSCOE</span>
+              </div>
+              <div class="roscoe-content-panel">
+                <div class="roscoe-gauge-wrapper">
+                  <svg viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="42" stroke="#f3f4f6" stroke-width="6" fill="transparent"></circle>
+                    <circle cx="50" cy="50" r="42" stroke="var(--red-accent)" stroke-width="6" stroke-dasharray="264" stroke-dashoffset="40" stroke-linecap="round" fill="transparent"></circle>
+                  </svg>
+                  <span class="roscoe-gauge-val">85%</span>
+                </div>
+                <div class="roscoe-stats-details">
+                  <h4>High Risk</h4>
+                  <p>Elevated humidity &amp; heat.</p>
+                </div>
+              </div>
+              
+              <div class="roscoe-list-panel">
+                <div class="roscoe-list-item">
+                  <span>Downy Mildew Prob.</span>
+                  <span>85%</span>
+                </div>
+                <div class="roscoe-list-item" style="background-color: var(--orange-bg); color: var(--orange-text);">
+                  <span>Botrytis Blight</span>
+                  <span>32%</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 7-Day Projection -->
+            <div class="col-8 info-card">
+              <div class="weather-7day-header">
+                <h3>7-Day Projection</h3>
+                <span class="text-label-caps" style="font-size: 10px; color: var(--secondary-text); cursor: pointer;" id="btnViewDetailedModel">VIEW DETAILED MODEL</span>
+              </div>
+              <div class="weather-7day-grid">
+                <div class="weather-day-column">
+                  <span class="day-label">Today</span>
+                  <span class="material-symbols-outlined day-icon">wb_sunny</span>
+                  <div class="day-temps">
+                    <span class="high">24°</span>
+                    <span class="low">18°</span>
+                  </div>
+                  <div class="day-precip">
+                    <span class="material-symbols-outlined">water_drop</span>
+                    <span>10%</span>
+                  </div>
+                </div>
+                <div class="weather-day-column">
+                  <span class="day-label">Tomorrow</span>
+                  <span class="material-symbols-outlined day-icon">rainy</span>
+                  <div class="day-temps">
+                    <span class="high">21°</span>
+                    <span class="low">16°</span>
+                  </div>
+                  <div class="day-precip">
+                    <span class="material-symbols-outlined">water_drop</span>
+                    <span>85%</span>
+                  </div>
+                </div>
+                <div class="weather-day-column">
+                  <span class="day-label">Wed</span>
+                  <span class="material-symbols-outlined day-icon">partly_cloudy_day</span>
+                  <div class="day-temps">
+                    <span class="high">22°</span>
+                    <span class="low">15°</span>
+                  </div>
+                  <div class="day-precip">
+                    <span class="material-symbols-outlined">water_drop</span>
+                    <span>30%</span>
+                  </div>
+                </div>
+                <div class="weather-day-column">
+                  <span class="day-label">Thu</span>
+                  <span class="material-symbols-outlined day-icon">wb_sunny</span>
+                  <div class="day-temps">
+                    <span class="high">26°</span>
+                    <span class="low">17°</span>
+                  </div>
+                  <div class="day-precip">
+                    <span class="material-symbols-outlined">water_drop</span>
+                    <span>0%</span>
+                  </div>
+                </div>
+                <div class="weather-day-column">
+                  <span class="day-label">Fri</span>
+                  <span class="material-symbols-outlined day-icon">wb_sunny</span>
+                  <div class="day-temps">
+                    <span class="high">28°</span>
+                    <span class="low">18°</span>
+                  </div>
+                  <div class="day-precip">
+                    <span class="material-symbols-outlined">water_drop</span>
+                    <span>0%</span>
+                  </div>
+                </div>
+                <div class="weather-day-column">
+                  <span class="day-label">Sat</span>
+                  <span class="material-symbols-outlined day-icon">partly_cloudy_day</span>
+                  <div class="day-temps">
+                    <span class="high">27°</span>
+                    <span class="low">19°</span>
+                  </div>
+                  <div class="day-precip">
+                    <span class="material-symbols-outlined">water_drop</span>
+                    <span>15%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ====================================================================
+           5. SIMULATOR VIEW (What-If Simulator)
+           ==================================================================== -->
+      <section id="simulator-view" class="view-panel">
+        <header class="content-header">
+          <div class="title-area">
+            <h2>What-If Simulator</h2>
+            <p>Test environmental factors and visualize projected outcomes.</p>
+          </div>
+        </header>
+        
+        <div class="view-body">
+          <div class="dashboard-grid">
+            
+            <!-- Left Card: Simulation Parameters -->
+            <div class="col-4 info-card simulator-params-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <h3 class="text-label-caps" style="color: var(--primary-text); margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+                  <span class="material-symbols-outlined" style="font-size: 18px">sliders</span>
+                  Simulation Parameters
+                </h3>
+                
+                <!-- Parameter: Nitrate Feed Level -->
+                <div class="simulator-param-row">
+                  <div class="simulator-param-labels">
+                    <span>Nitrate Feed Level</span>
+                    <span class="val" id="simValIrrigation">37%</span>
+                  </div>
+                  <input type="range" class="sim-slider-blue" id="simSliderIrrigation" min="0" max="100" value="37"/>
+                </div>
+                
+                <!-- Parameter: Base pH level -->
+                <div class="simulator-param-row">
+                  <div class="simulator-param-labels">
+                    <span>Base pH Level</span>
+                    <span class="val" id="simValMoisture">6.0</span>
+                  </div>
+                  <input type="range" class="sim-slider-blue" id="simSliderMoisture" min="4" max="9" step="0.1" value="6.0"/>
+                </div>
+                
+                <!-- Parameter: Temperature -->
+                <div class="simulator-param-row">
+                  <div class="simulator-param-labels">
+                    <span>Temperature</span>
+                    <span class="val orange" id="simValTemp">24°C</span>
+                  </div>
+                  <input type="range" class="sim-slider-orange" id="simSliderTemp" min="5" max="45" value="24"/>
+                </div>
+              </div>
+              
+              <div class="simulator-info-banner">
+                <span class="material-symbols-outlined">info</span>
+                <p>Adjusting these parameters instantly recalculates the predicted outcomes on the right using simulated agronomy models.</p>
+              </div>
+            </div>
+
+            <!-- Center Card: Crop Health Stability Circular Arc Gauge -->
+            <div class="col-4 info-card stability-circle-container">
+              <span class="text-label-caps" style="color: var(--secondary-text); font-size: 11px; margin-bottom: 12px;">Crop Health Stability</span>
+              <div class="stability-ring">
+                <svg viewBox="0 0 100 100">
+                  <circle class="bg" cx="50" cy="50" r="42" stroke-width="6"></circle>
+                  <circle class="fill" id="simStabilityFill" cx="50" cy="50" r="42" stroke-width="8" stroke-dasharray="264" stroke-dashoffset="68"></circle>
+                </svg>
+                <div class="stability-text">
+                  <span class="score" id="simStabilityText">74%</span>
+                  <span class="lbl">STABILITY</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Top Card: Sustainability Score -->
+            <div class="col-4 sustainability-score-card">
+              <h3>SUSTAINABILITY SCORE</h3>
+              <div class="score-display">
+                <span id="simSustainabilityVal">68</span><span>/100</span>
+              </div>
+              <p>Based on water usage efficiency and projected disease prevention.</p>
+              
+              <div class="score-bar-container" style="height: 6px; margin-top: auto;">
+                <div class="score-bar-fill" id="simSustainabilityBar" style="width: 68%;"></div>
+              </div>
+            </div>
+
+            <!-- Middle Bottom Card: Nutrient Absorption -->
+            <div class="col-6 info-card">
+              <p class="card-label">
+                <span>Nutrient Absorption</span>
+                <span class="material-symbols-outlined" style="color: var(--blue-accent);">electric_bolt</span>
+              </p>
+              <p class="card-value" id="simWaterEfficiencyText">63%</p>
+              <div class="progress-bar-container" style="margin-top: 14px;">
+                <div class="progress-bar-fill blue" id="simWaterEfficiencyBar" style="width: 63%"></div>
+              </div>
+              <p class="card-desc">Avoids over/under-fertilizing.</p>
+            </div>
+
+            <!-- Right Bottom Card: Disease Risk -->
+            <div class="col-6 info-card">
+              <p class="card-label">
+                <span>DISEASE RISK</span>
+                <span class="material-symbols-outlined" style="color: var(--red-accent);">coronavirus</span>
+              </p>
+              <p class="card-value" id="simDiseaseRiskText">34%</p>
+              <div class="progress-bar-container" style="margin-top: 14px;">
+                <div class="progress-bar-fill red" id="simDiseaseRiskBar" style="width: 34%"></div>
+              </div>
+              <p class="card-desc">Risk spikes with high temp &amp; humidity.</p>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           6. AI CHATBOT VIEW (Standalone frame option)
+           ==================================================================== -->
+      <section id="chatbot-view" class="view-panel">
+        <header class="content-header">
+          <div class="title-area">
+            <h2>AI Chatbot</h2>
+            <p>Talk with AgroGuardian AI agronomy assistant.</p>
+          </div>
+        </header>
+        <div class="view-body">
+          <div class="info-card" style="height: 500px; display: flex; flex-direction: column; padding: 0;">
+            <div class="chat-header">
+              <h4>
+                <span class="material-symbols-outlined">forum</span>
+                AgroGuardian Advisor
+              </h4>
+            </div>
+            <div class="chat-messages" id="standaloneChatMessages">
+              <div class="chat-message-bubble bot">
+                Hello! I am your AgroGuardian AI agricultural consultant. Ask me anything about soil nutrients, temperature stress, crop stability, or leaf diseases.
+              </div>
+            </div>
+            <div class="chat-input-area">
+              <input type="text" placeholder="Type a message..." id="standaloneChatInput"/>
+              <button id="btnSendStandaloneChat">
+                <span class="material-symbols-outlined">send</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+    
+  </div>
+
+  <!-- Floating Chatbot Widget Button (Visible on all views) -->
+  <div class="chat-floating-trigger" id="chatFloatingBtn" title="Ask AI Gemini">
+    <span class="material-symbols-outlined">chat</span>
+  </div>
+
+  <!-- Floating Chat Window Dialog -->
+  <div class="chat-window-overlay" id="chatWindow">
+    <div class="chat-header">
+      <h4>
+        <span class="material-symbols-outlined">forum</span>
+        AgroGuardian Advisor
+      </h4>
+      <span class="material-symbols-outlined close-btn" id="btnMinimizeChat">close</span>
+    </div>
+    <div class="chat-messages" id="floatingChatMessages">
+      <div class="chat-message-bubble bot">
+        Hello! I am your AgroGuardian AI agricultural consultant. Ask me anything about soil nutrients, temperature stress, crop stability, or leaf diseases.
+      </div>
+    </div>
+    <div class="chat-input-area">
+      <input type="text" placeholder="Type a message..." id="floatingChatInput"/>
+      <button id="btnSendFloatingChat">
+        <span class="material-symbols-outlined">send</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Javascript Code -->
+  <script src="js/script.js?v=3.1"></script>
+</body>
+</html>

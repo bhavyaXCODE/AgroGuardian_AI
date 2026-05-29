@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AgroGuardian AI - Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&amp;family=JetBrains+Mono:wght@100..800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .glass-card {
+      background: rgba(47, 54, 50, 0.2);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(109, 255, 127, 0.1);
+    }
+    .glow-primary {
+      box-shadow: 0 0 15px rgba(0, 229, 84, 0.2);
+    }
+    .radial-gauge {
+      background: conic-gradient(from 180deg, #00e554 0%, #00e554 88%, transparent 88%, transparent 100%);
+    }
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #09100c;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #2f3632;
+      border-radius: 10px;
+    }
+  </style>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+                  "surface-container-lowest": "#09100c",
+                  "surface-tint": "#00e554",
+                  "secondary-fixed": "#b7eaff",
+                  "primary-container": "#26ff63",
+                  "on-secondary-fixed-variant": "#004e60",
+                  "on-secondary": "#003543",
+                  "primary-fixed-dim": "#00e554",
+                  "on-error": "#690005",
+                  "on-surface": "#dde4de",
+                  "background": "#0e1511",
+                  "on-error-container": "#ffdad6",
+                  "error-container": "#93000a",
+                  "tertiary-container": "#d0e2d5",
+                  "surface-variant": "#2f3632",
+                  "primary-fixed": "#6dff7f",
+                  "outline-variant": "#3b4b3a",
+                  "surface-container-highest": "#2f3632",
+                  "on-tertiary-fixed-variant": "#3b4a40",
+                  "outline": "#849581",
+                  "on-tertiary-fixed": "#101f16",
+                  "on-primary-container": "#007125",
+                  "secondary-fixed-dim": "#4cd6ff",
+                  "on-background": "#dde4de",
+                  "inverse-primary": "#006e24",
+                  "tertiary-fixed": "#d5e7d9",
+                  "on-primary-fixed-variant": "#005319",
+                  "inverse-surface": "#dde4de",
+                  "surface-bright": "#333b37",
+                  "surface-dim": "#0e1511",
+                  "on-surface-variant": "#bacbb5",
+                  "on-tertiary": "#24342b",
+                  "on-tertiary-container": "#55655a",
+                  "on-primary-fixed": "#002106",
+                  "on-secondary-container": "#00566b",
+                  "tertiary-fixed-dim": "#b9cbbe",
+                  "tertiary": "#ecfff1",
+                  "primary": "#efffea",
+                  "surface-container-low": "#161d1a",
+                  "on-secondary-fixed": "#001f28",
+                  "secondary-container": "#14d1ff",
+                  "on-primary": "#00390e",
+                  "surface-container": "#1a211e",
+                  "surface": "#0e1511",
+                  "secondary": "#a6e6ff",
+                  "inverse-on-surface": "#2b322e",
+                  "error": "#ffb4ab",
+                  "surface-container-high": "#242c28"
+          },
+          "borderRadius": {
+                  "DEFAULT": "0.25rem",
+                  "lg": "0.5rem",
+                  "xl": "0.75rem",
+                  "full": "9999px"
+          },
+          "spacing": {
+                  "gutter": "16px",
+                  "stack-lg": "32px",
+                  "container-padding": "24px",
+                  "base": "8px",
+                  "stack-sm": "4px",
+                  "stack-md": "12px"
+          },
+          "fontFamily": {
+                  "headline-lg": ["Geist"],
+                  "body-md": ["Geist"],
+                  "display-lg": ["Geist"],
+                  "data-mono": ["JetBrains Mono"],
+                  "body-lg": ["Geist"],
+                  "label-caps": ["JetBrains Mono"],
+                  "headline-md": ["Geist"]
+          },
+          "fontSize": {
+                  "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                  "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                  "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                  "data-mono": ["14px", {"lineHeight": "1.4", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                  "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                  "label-caps": ["12px", {"lineHeight": "1.0", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                  "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen pb-24 selection:bg-primary-container selection:text-on-primary-container">
+<!-- Top AppBar -->
+<header class="bg-surface-container-lowest/80 backdrop-blur-xl docked full-width top-0 sticky z-50 border-b border-outline-variant/10 shadow-[0_0_15px_rgba(0,229,84,0.1)] flex justify-between items-center w-full px-gutter py-base">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-surface-tint" data-icon="hub">hub</span>
+<h1 class="font-headline-md text-headline-md font-bold tracking-tight text-surface-tint dark:text-primary-fixed">AgroGuardian AI</h1>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden md:flex items-center gap-6">
+<a class="font-label-caps text-label-caps text-primary-fixed font-bold" href="#">DASHBOARD</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-colors" href="#">SECTORS</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-colors" href="#">FLEET</a>
+</div>
+<div class="w-10 h-10 rounded-full border border-outline-variant overflow-hidden bg-surface-variant/30 flex items-center justify-center">
+<img alt="Profile" class="w-full h-full object-cover" data-alt="A close-up portrait of a high-tech agricultural lead operator with sleek, modern eyewear reflecting digital data interfaces. The lighting is low-key with sharp green and blue highlights, emphasizing a futuristic glassmorphic aesthetic in a dark, professional command center environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAtVk71UKJtSAaCYLdAjikdOXmkJx_CV5xI6fhLz9P-pD04lzwwj0nCnM6BWXyspWcoOj7CogrQNUEAsjvDvq3q75hzlMoBHq0aCs39RXRvGJnZ6dnu8PxUbJ3cYosybNvT1YRe3Ai_OIXIaQ1QunVcYaKTlkyOwhmDsODja1uN2afco7pRJR-hikj7xiZBtpN2JuLTS9kY5HcaLLIm5Unqu0xdDGjx5UpIihqTOjBKS55-NQuQzQavpjU3jvwaW21TnDEFSXO-uI2t"/>
+</div>
+</div>
+</header>
+<main class="max-w-7xl mx-auto px-gutter md:px-12 mt-6 space-y-stack-lg">
+<!-- Critical AI Alerts Banner -->
+<section class="relative overflow-hidden glass-card rounded-xl p-4 border-l-4 border-error shadow-[0_0_20px_rgba(255,180,171,0.1)] flex items-center gap-4">
+<div class="flex-shrink-0 w-10 h-10 rounded-full bg-error-container/20 flex items-center justify-center text-error">
+<span class="material-symbols-outlined" data-icon="warning">warning</span>
+</div>
+<div class="flex-1">
+<h2 class="font-label-caps text-label-caps text-error tracking-widest">CRITICAL AI ALERT</h2>
+<p class="font-body-md text-body-md text-on-surface">Severe Drought Risk predicted in Sector 7G within the next 7 days.</p>
+</div>
+<button class="font-label-caps text-label-caps bg-error text-on-error px-4 py-2 rounded-lg active:scale-95 transition-transform">
+        MITIGATE NOW
+      </button>
+</section>
+<!-- Hero Section: Health Intelligence Score -->
+<section class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+<div class="lg:col-span-2 glass-card rounded-2xl p-8 flex flex-col md:flex-row items-center gap-10 glow-primary relative overflow-hidden">
+<div class="relative w-48 h-48 md:w-64 md:h-64 flex items-center justify-center">
+<div class="absolute inset-0 rounded-full border-[12px] border-surface-variant/20"></div>
+<div class="absolute inset-0 rounded-full border-[12px] radial-gauge blur-[2px] opacity-80"></div>
+<div class="absolute inset-0 rounded-full border-[2px] border-primary-fixed/30 animate-pulse"></div>
+<div class="text-center z-10">
+<span class="font-display-lg text-display-lg text-primary-fixed block leading-none">88</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">HEALTH SCORE</span>
+</div>
+</div>
+<div class="flex-1 space-y-stack-md text-center md:text-left">
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Farm Health Intelligence</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-md">Your automated ecosystem is performing at optimal efficiency. 3 minor anomalies detected in nutrient distribution cycles.</p>
+<div class="flex flex-wrap gap-stack-md justify-center md:justify-start">
+<div class="px-3 py-1 bg-primary-container/10 border border-primary-fixed/20 rounded-full flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-primary-fixed glow-primary"></div>
+<span class="font-data-mono text-data-mono text-primary-fixed">SYSTEMS NOMINAL</span>
+</div>
+<div class="px-3 py-1 bg-secondary-container/10 border border-secondary-fixed/20 rounded-full flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary-fixed text-sm" data-icon="bolt">bolt</span>
+<span class="font-data-mono text-data-mono text-secondary-fixed">POWER: 94%</span>
+</div>
+</div>
+</div>
+<!-- Decorative background element -->
+<div class="absolute top-0 right-0 w-64 h-64 bg-primary-container/5 rounded-full blur-[100px] -mr-32 -mt-32"></div>
+</div>
+<!-- Quick Status Column -->
+<div class="glass-card rounded-2xl p-6 flex flex-col justify-between border-l-4 border-secondary-fixed-dim">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="precision_manufacturing">precision_manufacturing</span>
+          DEVICE FLEET STATUS
+        </h3>
+<div class="space-y-stack-lg my-6">
+<div class="flex justify-between items-end">
+<div>
+<p class="font-headline-md text-headline-md text-on-surface">12 / 14</p>
+<p class="font-body-md text-body-md text-on-surface-variant">Active Drones</p>
+</div>
+<span class="font-data-mono text-data-mono text-primary-fixed">85% LOAD</span>
+</div>
+<div class="h-1 bg-surface-variant/30 rounded-full overflow-hidden">
+<div class="h-full bg-primary-fixed w-[85%] glow-primary"></div>
+</div>
+<div class="flex justify-between items-center text-on-surface-variant font-data-mono text-sm">
+<span>2 Maintenance Required</span>
+<span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+<button class="w-full py-3 bg-surface-variant/30 hover:bg-surface-variant/50 border border-outline-variant/30 rounded-xl font-label-caps text-label-caps transition-all active:scale-[0.98]">
+          DEPLOY OPTIMIZER
+        </button>
+</div>
+</section>
+<!-- Metrics Bento Grid -->
+<section class="grid grid-cols-2 md:grid-cols-4 gap-gutter">
+<!-- Soil Health -->
+<div class="glass-card rounded-xl p-5 space-y-stack-md group hover:border-primary-fixed/40 transition-colors">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-primary-fixed" data-icon="potted_plant">potted_plant</span>
+<span class="font-data-mono text-data-mono text-primary-fixed">+2.4%</span>
+</div>
+<div>
+<p class="font-headline-md text-headline-md">92</p>
+<p class="font-label-caps text-label-caps text-on-surface-variant">Soil Health</p>
+</div>
+<div class="h-12 w-full flex items-end gap-1">
+<div class="flex-1 bg-primary-fixed/20 h-[40%] rounded-t-sm group-hover:h-[60%] transition-all"></div>
+<div class="flex-1 bg-primary-fixed/20 h-[55%] rounded-t-sm group-hover:h-[45%] transition-all"></div>
+<div class="flex-1 bg-primary-fixed/20 h-[70%] rounded-t-sm group-hover:h-[80%] transition-all"></div>
+<div class="flex-1 bg-primary-fixed/30 h-[90%] rounded-t-sm glow-primary transition-all"></div>
+</div>
+</div>
+<!-- Disease Risk -->
+<div class="glass-card rounded-xl p-5 space-y-stack-md border-l-4 border-error">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-error" data-icon="coronavirus">coronavirus</span>
+<span class="font-data-mono text-data-mono text-error">STABLE</span>
+</div>
+<div>
+<p class="font-headline-md text-headline-md">14%</p>
+<p class="font-label-caps text-label-caps text-on-surface-variant">Disease Risk</p>
+</div>
+<div class="h-12 w-full flex items-center gap-1 overflow-hidden">
+<svg class="w-full h-full" viewbox="0 0 100 40">
+<path d="M0 30 Q 25 25, 50 35 T 100 20" fill="none" stroke="#ffb4ab" stroke-width="2"></path>
+</svg>
+</div>
+</div>
+<!-- Water Efficiency -->
+<div class="glass-card rounded-xl p-5 space-y-stack-md">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-secondary-fixed" data-icon="opacity">opacity</span>
+<span class="font-data-mono text-data-mono text-secondary-fixed">98% OPT</span>
+</div>
+<div>
+<p class="font-headline-md text-headline-md">4.2k</p>
+<p class="font-label-caps text-label-caps text-on-surface-variant">L/H Usage</p>
+</div>
+<div class="h-12 w-full flex items-end gap-1">
+<div class="flex-1 bg-secondary-fixed/20 h-[80%] rounded-t-sm"></div>
+<div class="flex-1 bg-secondary-fixed/20 h-[75%] rounded-t-sm"></div>
+<div class="flex-1 bg-secondary-fixed/20 h-[70%] rounded-t-sm"></div>
+<div class="flex-1 bg-secondary-fixed/30 h-[65%] rounded-t-sm"></div>
+</div>
+</div>
+<!-- Sustainability -->
+<div class="glass-card rounded-xl p-5 space-y-stack-md">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-primary-fixed-dim" data-icon="eco">eco</span>
+<span class="font-data-mono text-data-mono text-primary-fixed-dim">GOLD TIER</span>
+</div>
+<div>
+<p class="font-headline-md text-headline-md">A+</p>
+<p class="font-label-caps text-label-caps text-on-surface-variant">ESG Score</p>
+</div>
+<div class="h-12 w-full flex items-center justify-center">
+<div class="w-10 h-10 rounded-full border-2 border-primary-fixed-dim/30 flex items-center justify-center">
+<div class="w-6 h-6 rounded-full bg-primary-fixed-dim/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-xs text-primary-fixed-dim" data-icon="verified">verified</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Bottom Section: Map & AI Insights -->
+<section class="grid grid-cols-1 lg:grid-cols-2 gap-gutter">
+<!-- AI Recommendation Feed -->
+<div class="space-y-stack-md">
+<h3 class="font-headline-md text-headline-md text-on-surface flex items-center gap-3 px-2">
+<span class="material-symbols-outlined" data-icon="psychology">psychology</span>
+          Actionable AI Insights
+        </h3>
+<div class="space-y-stack-md">
+<!-- Recommendation 1 -->
+<div class="glass-card rounded-2xl p-5 flex gap-4 hover:bg-surface-variant/40 transition-all cursor-pointer border-l-4 border-primary-fixed">
+<div class="w-12 h-12 rounded-xl bg-primary-container/10 flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-primary-fixed" data-icon="water_drop">water_drop</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<p class="font-label-caps text-label-caps text-primary-fixed mb-1">IRRIGATION LOGIC</p>
+<span class="font-data-mono text-xs text-on-surface-variant">2m ago</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface">Increase irrigation by 15% in <span class="text-primary-fixed font-bold">Sector 7G</span>. Predicted transpiration peak at 14:00.</p>
+<div class="mt-3 flex gap-base">
+<button class="px-3 py-1.5 bg-primary-fixed text-on-primary-fixed rounded-lg font-label-caps text-[10px] uppercase font-black">APPLY NOW</button>
+<button class="px-3 py-1.5 bg-surface-variant text-on-surface-variant rounded-lg font-label-caps text-[10px] uppercase">DISMISS</button>
+</div>
+</div>
+</div>
+<!-- Recommendation 2 -->
+<div class="glass-card rounded-2xl p-5 flex gap-4 hover:bg-surface-variant/40 transition-all cursor-pointer border-l-4 border-secondary-fixed">
+<div class="w-12 h-12 rounded-xl bg-secondary-container/10 flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-secondary-fixed" data-icon="helicopter">helicopter</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<p class="font-label-caps text-label-caps text-secondary-fixed mb-1">DRONE FLEET</p>
+<span class="font-data-mono text-xs text-on-surface-variant">45m ago</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface">Reroute Drone #04 to scan <span class="text-secondary-fixed font-bold">North Ridge</span> for pest migration patterns.</p>
+</div>
+</div>
+<!-- Recommendation 3 -->
+<div class="glass-card rounded-2xl p-5 flex gap-4 hover:bg-surface-variant/40 transition-all cursor-pointer border-l-4 border-tertiary-fixed-dim">
+<div class="w-12 h-12 rounded-xl bg-tertiary-container/10 flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-tertiary-fixed-dim" data-icon="inventory_2">inventory_2</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<p class="font-label-caps text-label-caps text-tertiary-fixed-dim mb-1">RESOURCES</p>
+<span class="font-data-mono text-xs text-on-surface-variant">1h ago</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface">Potash inventory low. Order 500kg for next week's scheduled fertilization cycle.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Sector Map Preview -->
+<div class="space-y-stack-md">
+<h3 class="font-headline-md text-headline-md text-on-surface flex items-center gap-3 px-2">
+<span class="material-symbols-outlined" data-icon="public">public</span>
+          Geospatial Map
+        </h3>
+<div class="glass-card rounded-2xl h-full min-h-[400px] relative overflow-hidden group">
+<img class="w-full h-full object-cover grayscale brightness-50 contrast-125" data-alt="A cinematic, high-angle satellite view of an ultra-modern agricultural farm at twilight. Glowing green data overlays create a grid across the fields, highlighting health sectors and active irrigation lines. The style is high-tech organic, with vibrant sprout green light trails connecting modular crop pods under a deep dark green night sky." data-location="Agricultural Farm Landscape" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC56SqQKbpX_8yHSYqkJTuQISTqG4Hvbs9cxX764tGBbYHPxWibeekECHlwz5SkYcMS6x35GTw18L1ZCMoXHPad8dEy2UMZ_pFEMI2n-fSkgdOowAHcEB_g2aVBc6zHlNY9HWZ-uM3eGJVtzkRQbETmiTqGVv06wHRTLf-lGyUBBpl5ff5AUGDt53t7Igwytzr1cLJlRARNa0ecvJSnHUbunPHgvmfNcHNsi_iZOfmxCkd3Mjpso688GfR01JXXxnwq5xWvMZ7ffYNp"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background to-transparent opacity-60"></div>
+<!-- Map Overlay Elements -->
+<div class="absolute inset-0 flex items-center justify-center p-8">
+<div class="relative w-full h-full">
+<!-- Animated Glowing Sector -->
+<div class="absolute top-[20%] left-[30%] w-24 h-24 bg-error/20 border-2 border-error/50 rounded-xl flex items-center justify-center backdrop-blur-sm animate-pulse">
+<span class="font-data-mono text-[10px] text-error font-bold">SECTOR 7G</span>
+</div>
+<!-- Drone Pointer -->
+<div class="absolute top-[45%] left-[60%] flex flex-col items-center">
+<div class="w-4 h-4 rounded-full bg-secondary-fixed glow-primary border-2 border-white/20"></div>
+<div class="w-px h-10 bg-gradient-to-b from-secondary-fixed to-transparent"></div>
+<div class="px-2 py-1 bg-surface-container-low/90 backdrop-blur rounded text-[10px] font-data-mono text-secondary-fixed border border-secondary-fixed/30">DRONE_04</div>
+</div>
+</div>
+</div>
+<div class="absolute bottom-4 right-4 flex flex-col gap-2">
+<button class="w-10 h-10 rounded-lg bg-surface-container-highest/80 backdrop-blur-xl border border-outline-variant/30 flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+</button>
+<button class="w-10 h-10 rounded-lg bg-surface-container-highest/80 backdrop-blur-xl border border-outline-variant/30 flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="remove">remove</span>
+</button>
+<button class="w-10 h-10 rounded-lg bg-primary-fixed text-on-primary-fixed shadow-lg flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="layers">layers</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 w-full z-50 bg-surface-container-lowest/90 backdrop-blur-2xl border-t border-outline-variant/20 shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
+<div class="flex justify-around items-center px-4 py-2 w-full max-w-full">
+<!-- Active Item: Health -->
+<a class="flex flex-col items-center justify-center bg-primary-container/20 text-primary-fixed rounded-xl p-2 shadow-[0_0_10px_rgba(0,229,84,0.3)] active:scale-90 duration-150 group" href="#">
+<span class="material-symbols-outlined" data-icon="monitoring">monitoring</span>
+<span class="font-label-caps text-label-caps mt-1">Health</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:text-primary transition-all active:scale-90 duration-150 group" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="font-label-caps text-label-caps mt-1 opacity-0 group-hover:opacity-100 transition-opacity">Analysis</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:text-primary transition-all active:scale-90 duration-150 group" href="#">
+<span class="material-symbols-outlined" data-icon="science">science</span>
+<span class="font-label-caps text-label-caps mt-1 opacity-0 group-hover:opacity-100 transition-opacity">Simulator</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:text-primary transition-all active:scale-90 duration-150 group" href="#">
+<span class="material-symbols-outlined" data-icon="public">public</span>
+<span class="font-label-caps text-label-caps mt-1 opacity-0 group-hover:opacity-100 transition-opacity">Map</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:text-primary transition-all active:scale-90 duration-150 group" href="#">
+<div class="relative">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<div class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-error rounded-full border-2 border-surface-container-lowest"></div>
+</div>
+<span class="font-label-caps text-label-caps mt-1 opacity-0 group-hover:opacity-100 transition-opacity">Alerts</span>
+</a>
+</div>
+</nav>
+<!-- Contextual FAB -->
+<button class="fixed bottom-24 right-6 w-16 h-16 bg-primary-fixed text-on-primary-fixed rounded-2xl shadow-[0_0_25px_rgba(0,229,84,0.4)] flex items-center justify-center active:scale-95 transition-all z-40 group md:bottom-12 md:right-12">
+<span class="material-symbols-outlined text-3xl" data-icon="add">add</span>
+<span class="absolute right-full mr-4 px-4 py-2 bg-primary-container text-on-primary-container font-label-caps text-label-caps rounded-xl opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-xl">QUICK ACTION</span>
+</button>
+</body></html>
