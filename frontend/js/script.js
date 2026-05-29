@@ -187,6 +187,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const diseaseDescription = document.getElementById('diseaseDescription');
   const diseaseRecommendation = document.getElementById('diseaseRecommendation');
 
+  // New element selectors
+  const diseaseSymptoms = document.getElementById('diseaseSymptoms');
+  const diseaseCauses = document.getElementById('diseaseCauses');
+  const diseaseTreatmentContainer = document.getElementById('diseaseTreatmentContainer');
+  const btnResetScan = document.getElementById('btnResetScan');
+
   if (leafDropzone && leafFileInput) {
     leafDropzone.addEventListener('click', () => {
       leafFileInput.click();
@@ -240,16 +246,60 @@ document.addEventListener('DOMContentLoaded', () => {
 
           // Render pathology report
           diagnosedDisease.textContent = data.diagnosed_disease;
-          diseaseSeverity.textContent = data.severity;
-          diseaseSeverity.className = `status-badge ${data.severity === 'High Risk' ? 'red' : (data.severity === 'Moderate Risk' ? 'orange' : 'green')}`;
           diseaseConfidence.textContent = data.confidence;
           diseaseDescription.textContent = data.description;
-          
-          const recBox = diseaseResultPanel.querySelector('.ai-insights-alert-box');
-          if (recBox) {
-            recBox.className = `ai-insights-alert-box ${data.severity === 'High Risk' ? 'red' : (data.severity === 'Moderate Risk' ? 'red' : 'green')}`;
-          }
           diseaseRecommendation.textContent = data.recommendation;
+
+          // Severity status badge and alert box styling
+          const severityText = data.severity || "Low Risk";
+          diseaseSeverity.textContent = severityText;
+          
+          let severityClass = "green";
+          let alertClass = "green";
+          if (severityText.toLowerCase().includes("high") || severityText.toLowerCase().includes("critical")) {
+            severityClass = "red";
+            alertClass = "red";
+          } else if (severityText.toLowerCase().includes("moderate") || severityText.toLowerCase().includes("medium")) {
+            severityClass = "orange";
+            alertClass = "red"; // Accent color red/orange
+          }
+          
+          diseaseSeverity.className = `status-badge ${severityClass}`;
+          if (diseaseTreatmentContainer) {
+            diseaseTreatmentContainer.className = `ai-insights-alert-box ${alertClass}`;
+          }
+
+          // Populate Symptoms dynamically
+          if (diseaseSymptoms) {
+            diseaseSymptoms.innerHTML = "";
+            if (data.symptoms && data.symptoms.length > 0) {
+              data.symptoms.forEach(symptom => {
+                const li = document.createElement("li");
+                li.textContent = symptom;
+                diseaseSymptoms.appendChild(li);
+              });
+            } else {
+              const li = document.createElement("li");
+              li.textContent = "No standard symptoms documented.";
+              diseaseSymptoms.appendChild(li);
+            }
+          }
+
+          // Populate Causes dynamically
+          if (diseaseCauses) {
+            diseaseCauses.innerHTML = "";
+            if (data.causes && data.causes.length > 0) {
+              data.causes.forEach(cause => {
+                const li = document.createElement("li");
+                li.textContent = cause;
+                diseaseCauses.appendChild(li);
+              });
+            } else {
+              const li = document.createElement("li");
+              li.textContent = "No specific environmental risk factors documented.";
+              diseaseCauses.appendChild(li);
+            }
+          }
 
           showToastNotification(`Leaf scanning complete. Pathology: ${data.diagnosed_disease}`);
         })
@@ -264,6 +314,31 @@ document.addEventListener('DOMContentLoaded', () => {
             Analyze Image
           `;
         });
+    });
+  }
+
+  // Bind Scan Another Leaf Reset Option
+  if (btnResetScan) {
+    btnResetScan.addEventListener('click', () => {
+      // Clear file inputs
+      if (leafFileInput) leafFileInput.value = "";
+      
+      // Reset image preview element
+      if (leafPreview) {
+        leafPreview.src = "";
+        leafPreview.style.display = 'none';
+      }
+      
+      // Restore upload prompts in the dropzone
+      if (uploadIcon) uploadIcon.style.display = 'block';
+      if (uploadText) uploadText.style.display = 'block';
+      if (uploadSubText) uploadSubText.style.display = 'block';
+      
+      // Toggle result card and placeholder views
+      if (diseaseResultPanel) diseaseResultPanel.style.display = 'none';
+      if (diseaseOutputPlaceholder) diseaseOutputPlaceholder.style.display = 'flex';
+      
+      showToastNotification("Ready for a new leaf scan.");
     });
   }
 

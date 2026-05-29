@@ -247,11 +247,33 @@
                     Downy mildew is caused by oomycete microbes that produce spores on leaf undersides under warm, wet conditions.
                   </p>
                 </div>
-                
-                <div class="ai-insights-alert-box red" style="margin-top: auto;">
-                  <span class="material-symbols-outlined">lightbulb</span>
-                  <p id="diseaseRecommendation">Action required: Suspend schedule and apply copper-based fungicide to affected patches immediately.</p>
+
+                <div class="weather-detail-item" style="border-top: 1px solid var(--outline); padding-top: 12px;">
+                  <span class="label">Symptoms</span>
+                  <ul id="diseaseSymptoms" style="margin-top: 6px; padding-left: 20px; font-size: 13px; color: var(--secondary-text); display: flex; flex-direction: column; gap: 4px;">
+                    <!-- Symptoms will be injected dynamically -->
+                  </ul>
                 </div>
+
+                <div class="weather-detail-item" style="border-top: 1px solid var(--outline); padding-top: 12px;">
+                  <span class="label">Causes / Risk Factors</span>
+                  <ul id="diseaseCauses" style="margin-top: 6px; padding-left: 20px; font-size: 13px; color: var(--secondary-text); display: flex; flex-direction: column; gap: 4px;">
+                    <!-- Causes will be injected dynamically -->
+                  </ul>
+                </div>
+                
+                <div class="weather-detail-item" style="border-top: 1px solid var(--outline); padding-top: 12px;">
+                  <span class="label">Recommended Treatment / Solution</span>
+                  <div class="ai-insights-alert-box red" style="margin-top: 8px;" id="diseaseTreatmentContainer">
+                    <span class="material-symbols-outlined">lightbulb</span>
+                    <p id="diseaseRecommendation">Action required: Suspend schedule and apply copper-based fungicide to affected patches immediately.</p>
+                  </div>
+                </div>
+
+                <button class="btn-secondary" id="btnResetScan" style="margin-top: auto; width: 100%; justify-content: center;">
+                  <span class="material-symbols-outlined">restart_alt</span>
+                  Scan Another Leaf
+                </button>
               </div>
             </div>
 
