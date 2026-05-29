@@ -1,7 +1,7 @@
 /**
  * AgroGuardian AI - Precision Agriculture Frontend Script
  * Contains: Navigation View Switching, Overview Reloading, Local Weather Lookup,
- * Leaf Image Analysis Simulator, Predictive Advisor actions, What-If Simulator Math,
+ * Leaf Image Analysis, Predictive Advisor actions, What-If Simulator Math,
  * and Interactive Chatbot dialogs.
  */
 
@@ -168,7 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   // ==========================================================================
-  // 4. Disease Leaf Image Upload & Diagnosis Simulation
+  // 4. Disease Leaf Image Upload & Diagnosis
   // ==========================================================================
   const leafDropzone = document.getElementById('leafDropzone');
   const leafFileInput = document.getElementById('leafFileInput');
@@ -176,12 +176,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const uploadIcon = document.getElementById('uploadIcon');
   const uploadText = document.getElementById('uploadText');
   const uploadSubText = document.getElementById('uploadSubText');
+  const diseaseModelInfo = document.getElementById('diseaseModelInfo');
   
   const btnAnalyzeLeaf = document.getElementById('btnAnalyzeLeaf');
   const diseaseOutputPlaceholder = document.getElementById('diseaseOutputPlaceholder');
   const diseaseResultPanel = document.getElementById('diseaseResultPanel');
   
   const diagnosedDisease = document.getElementById('diagnosedDisease');
+  const diseasePlant = document.getElementById('diseasePlant');
   const diseaseSeverity = document.getElementById('diseaseSeverity');
   const diseaseConfidence = document.getElementById('diseaseConfidence');
   const diseaseDescription = document.getElementById('diseaseDescription');
@@ -190,8 +192,67 @@ document.addEventListener('DOMContentLoaded', () => {
   // New element selectors
   const diseaseSymptoms = document.getElementById('diseaseSymptoms');
   const diseaseCauses = document.getElementById('diseaseCauses');
+  const diseaseAlternatives = document.getElementById('diseaseAlternatives');
   const diseaseTreatmentContainer = document.getElementById('diseaseTreatmentContainer');
   const btnResetScan = document.getElementById('btnResetScan');
+
+  function setListItems(listElement, items, fallback) {
+    if (!listElement) return;
+
+    listElement.innerHTML = "";
+    if (items && items.length > 0) {
+      items.forEach(item => {
+        const li = document.createElement("li");
+        li.textContent = item;
+        listElement.appendChild(li);
+      });
+      return;
+    }
+
+    const li = document.createElement("li");
+    li.textContent = fallback;
+    listElement.appendChild(li);
+  }
+
+  function renderDiagnosisError(message) {
+    if (diseaseOutputPlaceholder) diseaseOutputPlaceholder.style.display = 'none';
+    if (diseaseResultPanel) diseaseResultPanel.style.display = 'flex';
+    if (diagnosedDisease) diagnosedDisease.textContent = "Model unavailable";
+    if (diseasePlant) diseasePlant.textContent = "No prediction";
+    if (diseaseConfidence) diseaseConfidence.textContent = "0.0%";
+    if (diseaseDescription) diseaseDescription.textContent = message;
+    if (diseaseRecommendation) {
+      diseaseRecommendation.textContent = "Install backend ML dependencies and restart the API, then upload the leaf image again.";
+    }
+    if (diseaseSeverity) {
+      diseaseSeverity.textContent = "Setup Needed";
+      diseaseSeverity.className = "status-badge orange";
+    }
+    if (diseaseTreatmentContainer) {
+      diseaseTreatmentContainer.className = "ai-insights-alert-box red";
+    }
+    setListItems(diseaseSymptoms, ["No model prediction was returned."], "No prediction details.");
+    setListItems(diseaseCauses, ["Backend model dependency or model load failure."], "No failure details.");
+    setListItems(diseaseAlternatives, [], "No alternative matches returned.");
+  }
+
+  fetch(`${API_BASE}/api/diagnose/model-info`)
+    .then(response => response.json())
+    .then(data => {
+      if (!diseaseModelInfo) return;
+
+      if (data.ready) {
+        const plants = (data.supported_plants || []).slice(0, 8).join(", ");
+        diseaseModelInfo.textContent = `Model ready: ${data.classes} disease/healthy classes. Supported crops include ${plants}.`;
+      } else {
+        diseaseModelInfo.textContent = `Model setup needed: ${data.load_error || "backend model is not loaded"}`;
+      }
+    })
+    .catch(() => {
+      if (diseaseModelInfo) {
+        diseaseModelInfo.textContent = "Backend model status unavailable. Start the API on localhost:8000.";
+      }
+    });
 
   if (leafDropzone && leafFileInput) {
     leafDropzone.addEventListener('click', () => {
@@ -236,7 +297,13 @@ document.addEventListener('DOMContentLoaded', () => {
         body: formData
       })
         .then(response => {
-          if (!response.ok) throw new Error('Diagnosis failed');
+          if (!response.ok) {
+            return response.json()
+              .catch(() => ({ detail: 'Diagnosis failed' }))
+              .then(errorData => {
+                throw new Error(errorData.detail || 'Diagnosis failed');
+              });
+          }
           return response.json();
         })
         .then(data => {
@@ -246,6 +313,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
           // Render pathology report
           diagnosedDisease.textContent = data.diagnosed_disease;
+          if (diseasePlant) diseasePlant.textContent = data.plant || "Unknown plant";
           diseaseConfidence.textContent = data.confidence;
           diseaseDescription.textContent = data.description;
           diseaseRecommendation.textContent = data.recommendation;
@@ -269,35 +337,21 @@ document.addEventListener('DOMContentLoaded', () => {
             diseaseTreatmentContainer.className = `ai-insights-alert-box ${alertClass}`;
           }
 
-          // Populate Symptoms dynamically
-          if (diseaseSymptoms) {
-            diseaseSymptoms.innerHTML = "";
-            if (data.symptoms && data.symptoms.length > 0) {
-              data.symptoms.forEach(symptom => {
-                const li = document.createElement("li");
-                li.textContent = symptom;
-                diseaseSymptoms.appendChild(li);
-              });
-            } else {
-              const li = document.createElement("li");
-              li.textContent = "No standard symptoms documented.";
-              diseaseSymptoms.appendChild(li);
-            }
-          }
+          setListItems(diseaseSymptoms, data.symptoms, "No standard symptoms documented.");
+          setListItems(diseaseCauses, data.causes, "No specific environmental risk factors documented.");
 
-          // Populate Causes dynamically
-          if (diseaseCauses) {
-            diseaseCauses.innerHTML = "";
-            if (data.causes && data.causes.length > 0) {
-              data.causes.forEach(cause => {
+          if (diseaseAlternatives) {
+            diseaseAlternatives.innerHTML = "";
+            if (data.top_predictions && data.top_predictions.length > 0) {
+              data.top_predictions.forEach(prediction => {
                 const li = document.createElement("li");
-                li.textContent = cause;
-                diseaseCauses.appendChild(li);
+                li.textContent = `${prediction.name} (${prediction.confidence})`;
+                diseaseAlternatives.appendChild(li);
               });
             } else {
               const li = document.createElement("li");
-              li.textContent = "No specific environmental risk factors documented.";
-              diseaseCauses.appendChild(li);
+              li.textContent = "No alternative matches returned by the model.";
+              diseaseAlternatives.appendChild(li);
             }
           }
 
@@ -305,7 +359,8 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .catch(err => {
           console.error(err);
-          showToastNotification('Failed to analyze leaf image.', 'warning');
+          renderDiagnosisError(err.message || 'Failed to analyze leaf image.');
+          showToastNotification('Failed to analyze leaf image. Check backend model setup.', 'warning');
         })
         .finally(() => {
           btnAnalyzeLeaf.disabled = false;
