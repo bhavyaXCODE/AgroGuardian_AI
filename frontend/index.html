@@ -9,7 +9,7 @@
   <meta http-equiv="Expires" content="0"/>
   
   <!-- CSS Stylesheet -->
-  <link rel="stylesheet" href="css/style.css?v=3.1"/>
+  <link rel="stylesheet" href="css/style.css?v=3.2"/>
 </head>
 <body>
 
@@ -77,6 +77,10 @@
             <p>System status is optimal. Backend connected.</p>
           </div>
           <div class="header-controls">
+            <div id="esp32StatusBadge" class="badge-live-sync" style="background-color: rgba(11, 40, 26, 0.06); color: var(--secondary-text); border-color: var(--outline); font-size: 11px; margin-right: 8px; height: 38px;">
+              <div class="dot" id="esp32StatusDot" style="background-color: var(--muted-text); animation: none;"></div>
+              <span id="esp32StatusText">WAITING FOR ESP32</span>
+            </div>
             <button class="btn-secondary" id="btnReloadOverview" title="Sync Data">
               <span class="material-symbols-outlined">refresh</span>
             </button>
@@ -109,6 +113,23 @@
               <div class="progress-bar-container">
                 <div class="progress-bar-fill blue" style="width: 44.2%"></div>
               </div>
+            </div>
+
+            <!-- LDR Light Level Card -->
+            <div class="col-4 info-card">
+              <p class="card-label">LIGHT LEVEL</p>
+              <p class="card-value" id="overviewLightLevel">55.0%</p>
+              <div class="progress-bar-container">
+                <div class="progress-bar-fill orange" style="width: 55%"></div>
+              </div>
+              <p class="card-desc">LDR sensor on GPIO 34</p>
+            </div>
+
+            <!-- Relay Status Card -->
+            <div class="col-4 info-card">
+              <p class="card-label">RELAY STATUS</p>
+              <p class="card-value" id="overviewRelayState">OFF</p>
+              <p class="card-desc" id="overviewRelayDesc">Relay connected on GPIO 25</p>
             </div>
 
             <!-- Local Weather Card -->
@@ -716,6 +737,6 @@
   </div>
 
   <!-- Javascript Code -->
-  <script src="js/script.js?v=3.1"></script>
+  <script src="js/script.js?v=3.2"></script>
 </body>
 </html>

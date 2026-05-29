@@ -1,5 +1,6 @@
 import os
 import random
+import time
 from pathlib import Path
 from fastapi import FastAPI, UploadFile, File, Form, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -52,7 +53,25 @@ advisor_state = {
     "override": False
 }
 
+# Real-time telemetry state from ESP32
+esp32_telemetry = {
+    "temperature": None,
+    "humidity": None,
+    "soil_moisture": None,
+    "light_level": None,
+    "relay_state": False,
+    "last_updated": 0.0
+}
+
 # --- Request/Response Models ---
+
+class TelemetryRequest(BaseModel):
+    temperature: float
+    humidity: float
+    soil_moisture: Optional[float] = None
+    soil_nutrition: Optional[float] = None
+    light_level: Optional[float] = None
+    relay_state: Optional[bool] = False
 
 class SimulationRequest(BaseModel):
     irrigation: int  # Nitrate Feed Level percentage
@@ -82,20 +101,67 @@ class AdvisorStateResponse(BaseModel):
 def read_root():
     return {"message": "AgroGuardian AI Precision Agriculture API is running."}
 
+@app.post("/api/telemetry")
+def post_telemetry(req: TelemetryRequest):
+    """
+    Receive real-time sensor telemetry from ESP32.
+    """
+    soil_value = req.soil_moisture if req.soil_moisture is not None else req.soil_nutrition
+
+    esp32_telemetry["temperature"] = req.temperature
+    esp32_telemetry["humidity"] = req.humidity
+    esp32_telemetry["soil_moisture"] = soil_value
+    esp32_telemetry["light_level"] = req.light_level
+    esp32_telemetry["relay_state"] = bool(req.relay_state)
+    esp32_telemetry["last_updated"] = time.time()
+    return {
+        "status": "success",
+        "message": "Telemetry received",
+        "data": {
+            "temperature": esp32_telemetry["temperature"],
+            "humidity": esp32_telemetry["humidity"],
+            "soil_moisture": esp32_telemetry["soil_moisture"],
+            "soil_nutrition": esp32_telemetry["soil_moisture"],
+            "light_level": esp32_telemetry["light_level"],
+            "relay_state": esp32_telemetry["relay_state"],
+            "last_updated": esp32_telemetry["last_updated"]
+        }
+    }
+
 @app.get("/api/metrics")
 def get_metrics():
     """
     Get live sensor telemetry metrics.
-    Generates slightly dynamic values around normal baseline metrics to show live feeds.
+    Returns the latest ESP32 telemetry values without random fallback data.
     """
-    temp = round(23.0 + random.uniform(0.0, 1.0), 1)
-    humidity = round(65.0 + random.uniform(0.0, 4.0), 1)
-    soil_nutrition = round(43.0 + random.uniform(0.0, 3.0), 1)
-    
+    current_time = time.time()
+    has_telemetry = esp32_telemetry["last_updated"] > 0
+    last_seen = int(current_time - esp32_telemetry["last_updated"]) if has_telemetry else None
+
+    if has_telemetry:
+        soil_value = esp32_telemetry["soil_moisture"]
+        light_value = esp32_telemetry["light_level"]
+
+        return {
+            "temperature": round(esp32_telemetry["temperature"], 1),
+            "humidity": round(esp32_telemetry["humidity"], 1),
+            "soil_moisture": round(soil_value, 1) if soil_value is not None else 0.0,
+            "soil_nutrition": round(soil_value, 1) if soil_value is not None else 0.0,
+            "light_level": round(light_value, 1) if light_value is not None else 0.0,
+            "relay_state": esp32_telemetry["relay_state"],
+            "esp32_status": "online",
+            "last_seen": max(0, last_seen)
+        }
+
     return {
-        "temperature": temp,
-        "humidity": humidity,
-        "soil_nutrition": soil_nutrition
+        "temperature": 0.0,
+        "humidity": 0.0,
+        "soil_moisture": 0.0,
+        "soil_nutrition": 0.0,
+        "light_level": 0.0,
+        "relay_state": False,
+        "esp32_status": "waiting",
+        "last_seen": None
     }
 
 @app.get("/api/weather")

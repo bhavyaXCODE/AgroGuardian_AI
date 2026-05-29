@@ -332,6 +332,8 @@ body {
 .btn-secondary span {
   font-size: 19px;
   color: var(--green-accent);
+  display: inline-block;
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* Main View Body */
@@ -524,6 +526,9 @@ body {
 }
 .progress-bar-fill.red {
   background: linear-gradient(90deg, #ef4444, #fca5a5);
+}
+.progress-bar-fill.orange {
+  background: linear-gradient(90deg, #d97706, #fbbf24);
 }
 .progress-bar-fill.grey {
   background: #9ca3af;

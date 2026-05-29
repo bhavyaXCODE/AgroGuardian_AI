@@ -7,7 +7,9 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
-  const API_BASE = 'http://localhost:8000';
+  const API_BASE = window.location.protocol.startsWith('http')
+    ? `${window.location.protocol}//${window.location.hostname}:8000`
+    : 'http://localhost:8000';
 
   // ==========================================================================
   // 1. Navigation View Switching
@@ -57,49 +59,168 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   // ==========================================================================
-  // 2. Overview Dashboard Reload Sequence
+  // 2. Overview Dashboard Reload Sequence & ESP32 Live Telemetry
   // ==========================================================================
   const btnReloadOverview = document.getElementById('btnReloadOverview');
   const overviewTemp = document.getElementById('overviewTemp');
   const overviewHumidity = document.getElementById('overviewHumidity');
+  const overviewSoilMoisture = document.getElementById('overviewSoilMoisture');
+  const overviewLightLevel = document.getElementById('overviewLightLevel');
+  const overviewRelayState = document.getElementById('overviewRelayState');
+  const overviewRelayDesc = document.getElementById('overviewRelayDesc');
+
+  function fetchOverviewMetrics(isManual = false) {
+    const reloadIcon = btnReloadOverview ? btnReloadOverview.querySelector('.material-symbols-outlined') : null;
+    if (isManual && reloadIcon) {
+      reloadIcon.style.transform = 'rotate(360deg)';
+      reloadIcon.style.transition = 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
+    }
+
+    return fetch(`${API_BASE}/api/metrics?t=${Date.now()}`, { cache: 'no-store' })
+      .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.json();
+      })
+      .then(data => {
+        if (overviewTemp) overviewTemp.textContent = `${data.temperature}°C`;
+        if (overviewHumidity) {
+          overviewHumidity.textContent = `${data.humidity}%`;
+          const fill = overviewHumidity.parentElement.querySelector('.progress-bar-fill');
+          if (fill) fill.style.width = `${data.humidity}%`;
+        }
+        if (overviewSoilMoisture) {
+          const soilValue = data.soil_moisture ?? data.soil_nutrition;
+          overviewSoilMoisture.textContent = `${soilValue}%`;
+          const fill = overviewSoilMoisture.parentElement.querySelector('.progress-bar-fill');
+          if (fill) fill.style.width = `${soilValue}%`;
+        }
+        if (overviewLightLevel && data.light_level !== null && data.light_level !== undefined) {
+          overviewLightLevel.textContent = `${data.light_level}%`;
+          const fill = overviewLightLevel.parentElement.querySelector('.progress-bar-fill');
+          if (fill) fill.style.width = `${data.light_level}%`;
+        }
+        if (overviewRelayState) {
+          overviewRelayState.textContent = data.relay_state ? 'ON' : 'OFF';
+          overviewRelayState.style.color = data.relay_state ? 'var(--green-accent)' : 'var(--red-accent)';
+        }
+        if (overviewRelayDesc) {
+          overviewRelayDesc.textContent = data.relay_state
+            ? 'Pump / actuator circuit is active'
+            : 'Relay connected on GPIO 25';
+        }
+
+        // Update ESP32 Status Badge
+        const esp32StatusBadge = document.getElementById('esp32StatusBadge');
+        const esp32StatusDot = document.getElementById('esp32StatusDot');
+        const esp32StatusText = document.getElementById('esp32StatusText');
+
+        if (data.esp32_status === 'online') {
+          if (esp32StatusBadge) {
+            esp32StatusBadge.style.backgroundColor = 'var(--green-bg)';
+            esp32StatusBadge.style.color = 'var(--green-text)';
+            esp32StatusBadge.style.borderColor = 'rgba(34, 197, 94, 0.2)';
+          }
+          if (esp32StatusDot) {
+            esp32StatusDot.style.backgroundColor = 'var(--green-accent)';
+            esp32StatusDot.style.animation = 'pulseSync 2s infinite';
+          }
+          if (esp32StatusText) {
+            esp32StatusText.textContent = `ESP32 ONLINE (${data.last_seen}s ago)`;
+          }
+
+          // Update card descriptions
+          const tempCard = overviewTemp ? overviewTemp.closest('.info-card') : null;
+          const humCard = overviewHumidity ? overviewHumidity.closest('.info-card') : null;
+          const moistureCard = overviewSoilMoisture ? overviewSoilMoisture.closest('.info-card') : null;
+          const lightCard = overviewLightLevel ? overviewLightLevel.closest('.info-card') : null;
+
+          if (tempCard) {
+            const desc = tempCard.querySelector('.card-desc');
+            if (desc) desc.textContent = 'ESP32 Real-Time Feed';
+          }
+          if (humCard) {
+            const desc = humCard.querySelector('.card-desc');
+            if (desc) desc.textContent = 'ESP32 Real-Time Feed';
+          }
+          if (moistureCard) {
+            const desc = moistureCard.querySelector('.card-desc');
+            if (desc) desc.textContent = 'ESP32 Real-Time Feed';
+          }
+          if (lightCard) {
+            const desc = lightCard.querySelector('.card-desc');
+            if (desc) desc.textContent = 'ESP32 Real-Time Feed';
+          }
+        } else {
+          if (esp32StatusBadge) {
+            esp32StatusBadge.style.backgroundColor = 'rgba(11, 40, 26, 0.06)';
+            esp32StatusBadge.style.color = 'var(--secondary-text)';
+            esp32StatusBadge.style.borderColor = 'var(--outline)';
+          }
+          if (esp32StatusDot) {
+            esp32StatusDot.style.backgroundColor = 'var(--muted-text)';
+            esp32StatusDot.style.animation = 'none';
+          }
+          if (esp32StatusText) {
+            esp32StatusText.textContent = data.esp32_status === 'waiting'
+              ? 'WAITING FOR ESP32'
+              : 'ESP32 OFFLINE';
+          }
+
+          // Revert descriptions to default
+          const tempCard = overviewTemp ? overviewTemp.closest('.info-card') : null;
+          const humCard = overviewHumidity ? overviewHumidity.closest('.info-card') : null;
+          const moistureCard = overviewSoilMoisture ? overviewSoilMoisture.closest('.info-card') : null;
+          const lightCard = overviewLightLevel ? overviewLightLevel.closest('.info-card') : null;
+
+          if (tempCard) {
+            const desc = tempCard.querySelector('.card-desc');
+            if (desc) desc.textContent = 'Live sensor feed';
+          }
+          if (humCard) {
+            const desc = humCard.querySelector('.card-desc');
+            if (desc) desc.textContent = 'Live sensor feed';
+          }
+          if (moistureCard) {
+            const desc = moistureCard.querySelector('.card-desc');
+            if (desc) desc.textContent = 'Live sensor feed';
+          }
+          if (lightCard) {
+            const desc = lightCard.querySelector('.card-desc');
+            if (desc) desc.textContent = 'LDR sensor on GPIO 34';
+          }
+        }
+
+        if (isManual) {
+          showToastNotification('Ecosystem metrics refreshed successfully.');
+        }
+      })
+      .catch(err => {
+        console.error('Error fetching metrics:', err);
+        if (isManual) {
+          showToastNotification('Failed to fetch live ecosystem metrics.', 'warning');
+        }
+      })
+      .finally(() => {
+        if (isManual && reloadIcon) {
+          setTimeout(() => {
+            reloadIcon.style.transition = 'none';
+            reloadIcon.style.transform = 'rotate(0deg)';
+          }, 600);
+        }
+      });
+  }
 
   if (btnReloadOverview) {
     btnReloadOverview.addEventListener('click', () => {
-      btnReloadOverview.style.transform = 'rotate(180deg)';
-      btnReloadOverview.style.transition = 'transform 0.5s ease';
-      
-      fetch(`${API_BASE}/api/metrics`)
-        .then(response => {
-          if (!response.ok) throw new Error('Network response was not ok');
-          return response.json();
-        })
-        .then(data => {
-          if (overviewTemp) overviewTemp.textContent = `${data.temperature}°C`;
-          if (overviewHumidity) {
-            overviewHumidity.textContent = `${data.humidity}%`;
-            const fill = overviewHumidity.parentElement.querySelector('.progress-bar-fill');
-            if (fill) fill.style.width = `${data.humidity}%`;
-          }
-          const overviewSoilMoisture = document.getElementById('overviewSoilMoisture');
-          if (overviewSoilMoisture) {
-            overviewSoilMoisture.textContent = `${data.soil_nutrition}%`;
-            const fill = overviewSoilMoisture.parentElement.querySelector('.progress-bar-fill');
-            if (fill) fill.style.width = `${data.soil_nutrition}%`;
-          }
-          showToastNotification('Ecosystem metrics refreshed successfully.');
-        })
-        .catch(err => {
-          console.error('Error fetching metrics:', err);
-          showToastNotification('Failed to fetch live ecosystem metrics.', 'warning');
-        })
-        .finally(() => {
-          setTimeout(() => {
-            btnReloadOverview.style.transform = 'rotate(0deg)';
-            btnReloadOverview.style.transition = 'none';
-          }, 500);
-        });
+      fetchOverviewMetrics(true);
     });
   }
+
+  // Load metrics on startup and poll every 2 seconds
+  fetchOverviewMetrics(false);
+  setInterval(() => {
+    fetchOverviewMetrics(false);
+  }, 2000);
 
 
   // ==========================================================================
