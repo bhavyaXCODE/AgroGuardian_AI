@@ -7,6 +7,7 @@ from fastapi import FastAPI, UploadFile, File, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+from typing import Optional
 import requests
 from dotenv import load_dotenv
 from ml_model.plant_disease_service import PlantDiseaseModel
