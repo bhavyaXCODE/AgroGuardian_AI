@@ -1,15 +1,19 @@
 import os
 import random
+from uuid import uuid4
 from pathlib import Path
-from fastapi import FastAPI, UploadFile, File, Form, Query, HTTPException
+from fastapi import FastAPI, UploadFile, File, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from typing import Optional
 import requests
 from dotenv import load_dotenv
-import google.generativeai as genai
-from ml_model.classifier import DiseaseClassifier
+from ml_model.plant_disease_service import PlantDiseaseModel
+
+try:
+    import google.generativeai as genai
+except ImportError:
+    genai = None
 
 # Load environment variables from .env file
 load_dotenv()
@@ -34,18 +38,24 @@ app.add_middleware(
 
 # Initialize Gemini API if configured
 gemini_ready = False
-if GEMINI_API_KEY:
+if GEMINI_API_KEY and genai:
     try:
         genai.configure(api_key=GEMINI_API_KEY)
         gemini_ready = True
         print("Gemini API: Configured successfully.")
     except Exception as e:
         print(f"Gemini API: Failed to configure: {e}")
+elif GEMINI_API_KEY and not genai:
+    print("Gemini API: google-generativeai is not installed. Using simulated chatbot responses.")
 else:
     print("Gemini API: No API key found. Using simulated chatbot responses.")
 
-# Initialize Disease Classifier
-classifier = DiseaseClassifier()
+# Initialize plant disease model once at startup
+plant_disease_model = PlantDiseaseModel()
+if plant_disease_model.is_ready:
+    print(f"Plant disease model: Loaded {plant_disease_model.model_path}")
+else:
+    print(f"Plant disease model: Not ready. {plant_disease_model.load_error}")
 
 # In-memory storage for simple state variables (e.g. advisor state)
 advisor_state = {
@@ -197,15 +207,22 @@ def get_weather(city: str = Query("Hinganghat", description="City to get weather
 @app.post("/api/diagnose")
 async def diagnose_leaf(file: UploadFile = File(...)):
     """
-    Accepts leaf image upload and performs pathology scanning.
-    Invokes the DiseaseClassifier which handles ML models or simulated diagnosis fallback.
+    Accepts a leaf image upload and performs real plant disease classification.
     """
     if not file.filename:
         raise HTTPException(status_code=400, detail="Invalid file upload.")
+    if not file.content_type or not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Please upload a JPG, PNG, or other image file.")
+    if not plant_disease_model.is_ready:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Plant disease model is not loaded: {plant_disease_model.load_error}"
+        )
         
     temp_dir = Path("temp_uploads")
     temp_dir.mkdir(exist_ok=True)
-    temp_file_path = temp_dir / file.filename
+    upload_suffix = Path(file.filename).suffix.lower() or ".jpg"
+    temp_file_path = temp_dir / f"{uuid4().hex}{upload_suffix}"
     
     try:
         # Save upload file locally for ML inference ingestion
@@ -213,33 +230,28 @@ async def diagnose_leaf(file: UploadFile = File(...)):
             content = await file.read()
             buffer.write(content)
             
-        result = classifier.classify(str(temp_file_path), file.filename)
+        result = plant_disease_model.predict(str(temp_file_path))
         
         return {
             "filename": file.filename,
             "diagnosed_disease": result["disease"],
+            "model_label": result["label"],
+            "plant": result["plant"],
             "severity": result["severity"],
             "confidence": result["confidence"],
             "description": result["description"],
             "recommendation": result["recommendation"],
             "symptoms": result.get("symptoms", []),
             "causes": result.get("causes", []),
-            "treatment": result.get("treatment", "")
+            "treatment": result.get("treatment", ""),
+            "top_predictions": result.get("top_predictions", []),
+            "model_status": result.get("model_status", "ready")
         }
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"Leaf Diagnosis Error: {e}")
-        # Default fallback
-        return {
-            "filename": file.filename,
-            "diagnosed_disease": "Healthy Crop Leaf",
-            "severity": "No Risk",
-            "confidence": "95.0%",
-            "description": "Unable to complete classification run. Falling back to default baseline status.",
-            "recommendation": "No action required. Maintain biological monitoring cycles.",
-            "symptoms": ["Healthy green leaves"],
-            "causes": ["Optimal environmental conditions"],
-            "treatment": "No action required. Maintain biological monitoring cycles."
-        }
+        raise HTTPException(status_code=500, detail=f"Unable to classify leaf image: {e}")
     finally:
         # Clean up temporary upload
         if temp_file_path.exists():
@@ -247,6 +259,11 @@ async def diagnose_leaf(file: UploadFile = File(...)):
                 os.remove(temp_file_path)
             except Exception as cleanup_err:
                 print(f"Leaf Diagnosis: Failed to delete temp file: {cleanup_err}")
+
+@app.get("/api/diagnose/model-info")
+def get_diagnosis_model_info():
+    """Return model readiness and supported plant classes for the frontend."""
+    return plant_disease_model.info()
 
 @app.post("/api/advisor/suspend", response_model=AdvisorStateResponse)
 def suspend_schedule():
