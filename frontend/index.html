@@ -219,7 +219,7 @@
         <header class="content-header">
           <div class="title-area">
             <h2>Disease Detection</h2>
-            <p>Upload a clear single-leaf image for model prediction.</p>
+            <p>Upload a clear diseased or healthy leaf photo for real model prediction.</p>
           </div>
         </header>
         
@@ -232,20 +232,23 @@
                 <input type="file" id="leafFileInput" accept="image/*" style="display: none;"/>
                 <span class="material-symbols-outlined upload-icon" id="uploadIcon">cloud_upload</span>
                 <p class="upload-text" id="uploadText">Browse Leaf Image</p>
-                <p class="upload-sub" id="uploadSubText">JPG or PNG</p>
+                <p class="upload-sub" id="uploadSubText">Single leaf, good light, JPG or PNG</p>
                 <img src="" class="preview-img" id="leafPreview" style="display: none;" alt="Leaf upload preview"/>
               </div>
               <button class="btn-primary" id="btnAnalyzeLeaf">
                 <span class="material-symbols-outlined">auto_awesome</span>
                 Analyze Image
               </button>
+              <p class="card-desc" id="diseaseModelInfo" style="margin-top: 12px;">
+                Model check pending. Supports apple, tomato, potato, grape, corn, pepper, peach, citrus, squash, strawberry, and more.
+              </p>
             </div>
             
             <!-- Right Card: Diagnosis Output -->
             <div class="col-6 info-card">
               <div class="disease-placeholder-card" id="diseaseOutputPlaceholder">
                 <span class="material-symbols-outlined microscope-icon">biotech</span>
-                <p>Prediction results will appear here.</p>
+                <p>Upload one plant leaf to identify the crop, disease, confidence, symptoms, and treatment.</p>
               </div>
               
               <div id="diseaseResultPanel" style="display: none; flex-direction: column; gap: 16px; height: 100%;">
@@ -258,6 +261,11 @@
                 </div>
                 
                 <div class="weather-detail-item">
+                  <span class="label">Detected Plant</span>
+                  <span class="val" id="diseasePlant">Awaiting scan</span>
+                </div>
+
+                <div class="weather-detail-item">
                   <span class="label">Confidence Score</span>
                   <span class="val" id="diseaseConfidence">92.4%</span>
                 </div>
@@ -268,11 +276,40 @@
                     Downy mildew is caused by oomycete microbes that produce spores on leaf undersides under warm, wet conditions.
                   </p>
                 </div>
-                
-                <div class="ai-insights-alert-box red" style="margin-top: auto;">
-                  <span class="material-symbols-outlined">lightbulb</span>
-                  <p id="diseaseRecommendation">Action required: Suspend schedule and apply copper-based fungicide to affected patches immediately.</p>
+
+                <div class="weather-detail-item" style="border-top: 1px solid var(--outline); padding-top: 12px;">
+                  <span class="label">Symptoms</span>
+                  <ul id="diseaseSymptoms" style="margin-top: 6px; padding-left: 20px; font-size: 13px; color: var(--secondary-text); display: flex; flex-direction: column; gap: 4px;">
+                    <!-- Symptoms will be injected dynamically -->
+                  </ul>
                 </div>
+
+                <div class="weather-detail-item" style="border-top: 1px solid var(--outline); padding-top: 12px;">
+                  <span class="label">Causes / Risk Factors</span>
+                  <ul id="diseaseCauses" style="margin-top: 6px; padding-left: 20px; font-size: 13px; color: var(--secondary-text); display: flex; flex-direction: column; gap: 4px;">
+                    <!-- Causes will be injected dynamically -->
+                  </ul>
+                </div>
+                
+                <div class="weather-detail-item" style="border-top: 1px solid var(--outline); padding-top: 12px;">
+                  <span class="label">Other Possible Matches</span>
+                  <ul id="diseaseAlternatives" style="margin-top: 6px; padding-left: 20px; font-size: 13px; color: var(--secondary-text); display: flex; flex-direction: column; gap: 4px;">
+                    <!-- Alternative predictions will be injected dynamically -->
+                  </ul>
+                </div>
+
+                <div class="weather-detail-item" style="border-top: 1px solid var(--outline); padding-top: 12px;">
+                  <span class="label">Recommended Treatment / Solution</span>
+                  <div class="ai-insights-alert-box red" style="margin-top: 8px;" id="diseaseTreatmentContainer">
+                    <span class="material-symbols-outlined">lightbulb</span>
+                    <p id="diseaseRecommendation">Action required: Suspend schedule and apply copper-based fungicide to affected patches immediately.</p>
+                  </div>
+                </div>
+
+                <button class="btn-secondary" id="btnResetScan" style="margin-top: auto; width: 100%; justify-content: center;">
+                  <span class="material-symbols-outlined">restart_alt</span>
+                  Scan Another Leaf
+                </button>
               </div>
             </div>
 
